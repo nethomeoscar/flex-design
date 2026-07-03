@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeonFlex Design — Editor Vectorial</title>
+<style>
+  :root{
+    --bg-app:#0c1018;
+    --bg-header:#10141f;
+    --bg-sidebar:#11162296;
+    --bg-sidebar-solid:#131826;
+    --panel-border:#232a3d;
+    --canvas-bg:#f5f6f8;
+    --grid-line:#e2e5eb;
+    --grid-line-major:#d3d8e2;
+    --text-hi:#eef1f8;
+    --text-lo:#8993ab;
+    --text-mid:#c3c9db;
+    --accent:#3b82f6;
+    --accent-soft:#3b82f61f;
+    --accent-hover:#5b93f7;
+    --danger:#ef5a6f;
+    --node-fill:#ffffff;
+    --node-stroke:#3b82f6;
+    --handle-line:#9aa4bd;
+    --handle-fill:#ffffff;
+    --radius-sm:6px;
+    --radius-md:10px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    background:var(--bg-app);
+    font-family:var(--sans);
+    color:var(--text-hi);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  #app{
+    display:grid;
+    grid-template-rows:52px 1fr;
+    grid-template-columns:1fr;
+    height:100vh;
+    width:100vw;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    grid-column:1 / -1;
+    background:var(--bg-header);
+    border-bottom:1px solid var(--panel-border);
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:0 16px;
+    z-index:20;
+  }
+  .brand{
+    display:flex; align-items:center; gap:8px;
+    font-weight:700; font-size:15px; letter-spacing:0.2px;
+    margin-right:8px; white-space:nowrap;
+  }
+  .brand .mark{
+    width:26px;height:26px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),#8b5cf6);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px; font-weight:800; color:white;
+  }
+  .hbtn{
+    background:transparent; border:1px solid transparent; color:var(--text-mid);
+    width:32px;height:32px;border-radius:var(--radius-sm);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer; transition:.12s;
+  }
+  .hbtn:hover{background:#1c2334; color:var(--text-hi);}
+  .hbtn:disabled{opacity:.35; cursor:not-allowed;}
+  .hbtn:disabled:hover{background:transparent;}
+  .hsep{width:1px;height:22px;background:var(--panel-border);margin:0 2px;}
+  .htoggles{
+    display:flex; align-items:center; gap:6px;
+    background:#171d2c; border:1px solid var(--panel-border);
+    border-radius:var(--radius-sm); padding:4px 6px;
+    font-size:12.5px; color:var(--text-mid);
+  }
+  .htoggles button{
+    background:transparent;border:none;color:inherit;font:inherit;
+    cursor:pointer; padding:4px 8px; border-radius:5px; display:flex; align-items:center; gap:6px;
+  }
+  .htoggles button.on{color:var(--text-hi);}
+  .htoggles button .dot{width:7px;height:7px;border-radius:50%;background:#3a4258;}
+  .htoggles button.on .dot{background:var(--accent);}
+  .htoggles .divider{width:1px;height:16px;background:var(--panel-border);}
+
+  .header-right{
+    margin-left:auto;
+    display:flex; align-items:center; gap:10px;
+  }
+  .donate-btn{
+    display:flex; align-items:center; gap:7px;
+    background:transparent; border:1px solid #3a4363; color:var(--text-hi);
+    border-radius:var(--radius-sm); padding:7px 13px; font-size:12.5px; font-weight:600;
+    cursor:pointer; font-family:var(--sans); transition:.12s;
+	text-decoration: none;
+  }
+  .donate-btn:hover{background:#e0577022; border-color:#e05770; color:#ff8fa3;}
+  .donate-btn svg{color:#ff6b81;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,8,14,0.6); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:100;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    position:relative; width:340px; max-width:90vw;
+    background:var(--bg-sidebar-solid); border:1px solid var(--panel-border);
+    border-radius:16px; padding:26px 24px 22px 24px; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-close{
+    position:absolute; top:12px; right:12px; width:26px; height:26px;
+    background:transparent; border:none; color:var(--text-lo); cursor:pointer;
+    border-radius:6px; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{background:#1c2334; color:var(--text-hi);}
+  .modal-icon{
+    width:48px; height:48px; margin:0 auto 12px auto; border-radius:50%;
+    background:linear-gradient(135deg,#ff6b81,#e05770);
+    display:flex; align-items:center; justify-content:center; color:white;
+  }
+  .modal-card h3{margin:0 0 8px 0; font-size:17px; color:var(--text-hi);}
+  .modal-sub{font-size:12.5px; color:var(--text-lo); line-height:1.5; margin:0 0 18px 0;}
+  .donate-option{
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    padding:11px 14px; border-radius:10px; font-size:13.5px; font-weight:600;
+    text-decoration:none; margin-bottom:10px; transition:.12s; border:1px solid transparent;
+  }
+  .donate-option.paypal{background:#003087; color:white;}
+  .donate-option.paypal:hover{background:#00256b;}
+  .donate-option.stripe{background:#635bff; color:white;}
+  .donate-option.stripe:hover{background:#4f47e0;}
+  .modal-note{font-size:11px; color:var(--text-lo); margin-top:8px;}
+
+  /* ---------- LAYOUT ---------- */
+  #main{
+    display:grid;
+    grid-template-columns:56px 1fr 300px;
+    min-height:0;
+  }
+
+  /* Left mini tool rail */
+  #toolrail{
+    background:var(--bg-header);
+    border-right:1px solid var(--panel-border);
+    display:flex; flex-direction:column; align-items:center;
+    padding:12px 0; gap:6px;
+  }
+  .tool-btn{
+    width:38px;height:38px;border-radius:var(--radius-sm);
+    background:transparent;border:1px solid transparent;color:var(--text-lo);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:.12s;
+  }
+  .tool-btn:hover{background:#1a2131;color:var(--text-hi);}
+  .tool-btn.active{background:var(--accent-soft);border-color:#3b82f655;color:var(--accent);}
+  .rail-sep{width:26px;height:1px;background:var(--panel-border);margin:6px 0;}
+
+  /* Canvas area */
+  #canvasWrap{
+    position:relative;
+    background:var(--canvas-bg);
+    overflow:hidden;
+    cursor:crosshair;
+  }
+  #canvasWrap.tool-select{cursor:default;}
+  #canvasWrap.panning{cursor:grabbing;}
+  #canvasWrap.space-ready{cursor:grab;}
+  svg#stage{display:block; width:100%; height:100%;}
+
+  #zoomIndicator{
+    position:absolute; left:14px; bottom:14px;
+    background:#ffffffcc; backdrop-filter:blur(6px);
+    border:1px solid #dde1ea; border-radius:8px;
+    font-size:12px; color:#556; padding:5px 10px;
+    font-family:var(--mono);
+    pointer-events:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  #hint{
+    position:absolute; top:14px; left:14px;
+    background:#ffffffcc; backdrop-filter:blur(6px);
+    border:1px solid #dde1ea; border-radius:8px;
+    font-size:12px; color:#556; padding:7px 12px;
+    max-width:360px; line-height:1.45;
+    pointer-events:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  #sidebar{
+    background:var(--bg-sidebar-solid);
+    border-left:1px solid var(--panel-border);
+    display:flex; flex-direction:column;
+    min-height:0;
+  }
+  .sb-header{
+    padding:16px 18px 8px 18px;
+    font-size:15px; font-weight:700; color:var(--text-hi);
+  }
+  .sb-tabs{
+    display:flex; gap:4px; padding:6px 14px 12px 14px;
+    border-bottom:1px solid var(--panel-border);
+  }
+  .sb-tab{
+    flex:1; height:34px; border-radius:8px; border:1px solid transparent;
+    background:transparent; color:var(--text-lo); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:.12s;
+  }
+  .sb-tab:hover{color:var(--text-hi); background:#1a2031;}
+  .sb-tab.active{background:var(--accent-soft); color:var(--accent); border-color:#3b82f650;}
+  .sb-body{
+    flex:1; overflow-y:auto; padding:16px 18px 24px 18px;
+  }
+  .sb-body::-webkit-scrollbar{width:8px;}
+  .sb-body::-webkit-scrollbar-thumb{background:#232b40;border-radius:8px;}
+
+  .sb-section-title{
+    font-size:11px; font-weight:700; letter-spacing:.08em;
+    color:var(--text-lo); text-transform:uppercase;
+    margin:18px 0 10px 0;
+  }
+  .sb-section-title:first-child{margin-top:0;}
+
+  .stat-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;}
+  .stat-label{font-size:12.5px; color:var(--text-lo);}
+  .stat-value{font-size:12.5px; color:var(--text-hi); font-family:var(--mono);}
+  .stat-big{
+    font-size:19px; font-weight:700; color:var(--text-hi);
+    font-family:var(--mono); margin-top:2px;
+  }
+  .stat-sub{font-size:11.5px; color:var(--text-lo); margin-top:2px;}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block; font-size:12.5px; color:var(--text-mid); margin-bottom:6px;
+  }
+  .field .row{display:flex; align-items:center; gap:8px;}
+  input[type="number"], select{
+    background:#0f1420; border:1px solid var(--panel-border); color:var(--text-hi);
+    border-radius:7px; padding:7px 9px; font-size:13px; font-family:var(--mono);
+    width:100%; outline:none;
+  }
+  select{font-family:var(--sans); appearance:none;}
+  input[type="number"]:focus, select:focus{border-color:var(--accent);}
+  input[type="range"]{
+    flex:1; accent-color:var(--accent); height:4px;
+  }
+  .range-out{
+    font-size:12px; color:var(--text-mid); font-family:var(--mono); min-width:38px; text-align:right;
+  }
+
+  .seg{
+    display:flex; background:#0f1420; border:1px solid var(--panel-border);
+    border-radius:8px; overflow:hidden;
+  }
+  .seg button{
+    flex:1; background:transparent; border:none; color:var(--text-mid);
+    padding:8px 0; font-size:12.5px; cursor:pointer; font-family:var(--sans);
+    border-right:1px solid var(--panel-border);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button.active{background:var(--accent); color:white; font-weight:600;}
+  .seg button:hover:not(.active){background:#161c2b;}
+
+  .mode-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .mode-card{
+    background:#0f1420; border:1px solid var(--panel-border); border-radius:10px;
+    padding:12px 8px; text-align:center; cursor:pointer; color:var(--text-mid);
+  }
+  .mode-card svg{display:block; margin:0 auto 6px auto;}
+  .mode-card .t{font-size:11.5px; font-weight:700; letter-spacing:.03em;}
+  .mode-card .s{font-size:10.5px; color:var(--text-lo); margin-top:1px;}
+  .mode-card.active{background:var(--accent); color:white; border-color:var(--accent);}
+  .mode-card.active .s{color:#e4ecff;}
+  .mode-card:not(.active):hover{border-color:#3b4763;}
+  .mode-card:disabled, .mode-card.disabled{opacity:.4; cursor:not-allowed;}
+
+  .hint-box{
+    margin-top:16px; background:#0f1420; border:1px dashed #2a3247;
+    border-radius:9px; padding:10px 12px; font-size:11.5px; color:var(--text-lo); line-height:1.5;
+  }
+  .hint-box b{color:var(--text-mid);}
+
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:#171e2f; border:1px solid var(--panel-border); color:var(--text-hi);
+    border-radius:8px; padding:9px 12px; font-size:13px; cursor:pointer; width:100%;
+    font-family:var(--sans); transition:.12s;
+  }
+  .btn:hover{background:#1e2740; border-color:#354162;}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:white;}
+  .btn.primary:hover{background:var(--accent-hover);}
+  .btn.danger{color:var(--danger);}
+  .btn.danger:hover{background:#3a1a22; border-color:#5a2530;}
+  .btn.small{padding:6px 10px; font-size:12px;}
+
+  .layer-item{
+    display:flex; align-items:center; gap:8px;
+    padding:9px 10px; border-radius:8px; margin-bottom:6px;
+    background:#0f1420; border:1px solid var(--panel-border); cursor:pointer;
+  }
+  .layer-item.active{border-color:var(--accent); background:var(--accent-soft);}
+  .layer-item .swatch{width:14px;height:14px;border-radius:4px;border:2px solid #556; flex-shrink:0;}
+  .layer-item .name{flex:1; font-size:12.5px; color:var(--text-mid);}
+  .layer-item.active .name{color:var(--text-hi);}
+  .layer-item .len{font-size:11px; color:var(--text-lo); font-family:var(--mono);}
+  .layer-item .del{
+    background:transparent;border:none;color:var(--text-lo);cursor:pointer;
+    width:22px;height:22px;border-radius:5px; display:flex;align-items:center;justify-content:center;
+  }
+  .layer-item .del:hover{color:var(--danger); background:#2a1620;}
+
+  .empty-note{color:var(--text-lo); font-size:12.5px; text-align:center; padding:26px 10px; line-height:1.6;}
+
+  .lock-btn{
+    width:26px; height:26px; border-radius:6px;
+    background:#0f1420; border:1px solid var(--panel-border); color:var(--text-lo);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .lock-btn.on{background:var(--accent-soft); border-color:#3b82f655; color:var(--accent);}
+  .lock-btn:hover{color:var(--text-hi);}
+
+  .help-greeting{font-size:14.5px; font-weight:700; color:var(--text-hi); margin-bottom:14px;}
+  .help-list{list-style:none; margin:0 0 6px 0; padding:0;}
+  .help-list li{
+    font-size:12.5px; color:var(--text-mid); line-height:1.55;
+    padding:8px 0 8px 16px; position:relative; border-bottom:1px solid #1c2233;
+  }
+  .help-list li:last-child{border-bottom:none;}
+  .help-list li::before{
+    content:'•'; position:absolute; left:0; top:8px; color:var(--accent);
+  }
+  .help-list li b{color:var(--text-hi);}
+  .help-p{font-size:12.5px; color:var(--text-mid); line-height:1.6; margin:0 0 10px 0;}
+  .help-note{font-size:11.5px; color:var(--text-lo); font-style:italic;}
+  kbd{
+    background:#0f1420; border:1px solid var(--panel-border); border-bottom-width:2px;
+    border-radius:4px; padding:1px 6px; font-family:var(--mono); font-size:11px; color:var(--text-hi);
+  }
+
+  input[type="file"]{display:none;}
+
+  /* SVG overlay elements */
+  .node-handle{cursor:pointer;}
+  .grab-handle{cursor:grab;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><div class="mark">NFD</div>NeónFlex Design</div>
+    <button class="hbtn" id="btnUndo" title="Deshacer (Ctrl+Z)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+    </button>
+    <button class="hbtn" id="btnRedo" title="Rehacer (Ctrl+Shift+Z)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg>
+    </button>
+    <div class="hsep"></div>
+    <button class="hbtn" id="btnSave" title="Guardar proyecto (.json)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+    </button>
+    <button class="hbtn" id="btnNew" title="Lienzo nuevo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+    </button>
+    <button class="hbtn" id="btnExport" title="Exportar SVG">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+    </button>
+    <div class="header-right">
+      <div class="htoggles">
+        <button id="toggleGrid" class="on"><span class="dot"></span>Cuadrícula: <span id="toggleGridLabel">On</span></button>
+        <div class="divider"></div>
+        <button id="toggleMeasure" class="on"><span class="dot"></span>Medidas: <span id="toggleMeasureLabel">On</span></button>
+      </div>
+	  <button class="donate-btn" id="btnDonate" title="Apoyar este proyecto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></svg>
+        Donación
+      </button>
+	  <a class="donate-btn" id="btnContact" title="Contáctanos" href="contacto.html" target="_self" rel="noopener">
+	    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+	   Contáctanos
+	  </a>  
+    </div>
+  </header>
+
+  <!-- ===================== MODAL DE DONACIÓN ===================== -->
+  <div id="donateOverlay" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close" id="donateClose" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></svg>
+      </div>
+      <h3>Apoya este proyecto</h3>
+      <p class="modal-sub">NeónFlex Design es gratuito y de código abierto. Si te resulta útil, considera invitarnos un café — cualquier aporte ayuda a mantenerlo.</p>
+      <!--
+        NOTA PARA EL DESARROLLADOR:
+        Reemplaza los enlaces de abajo por tus datos reales:
+          - PayPal: cambia "https://paypal.me/TU_USUARIO" por tu enlace de PayPal.me
+          - Stripe: cambia "https://buy.stripe.com/TU_ENLACE" por tu Payment Link de Stripe
+      -->
+      <a class="donate-option paypal" href="https://paypal.me/oquirozs/10" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.4 20.6h-3l2.2-14h5.8c3 0 5 1.6 4.5 4.6-.5 3.4-3 5-6.2 5H8.3l-.9 4.4Zm2.2-7.9h1.7c1.6 0 2.6-.7 2.8-2.1.2-1.4-.6-2-2.1-2H9.7l-.1.5-1 3.6Z"/></svg>
+        Donar con PayPal
+      </a>
+      <a class="donate-option stripe" href="https://buy.stripe.com/eVq28s7ML5ORf2AcUdcQU01" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 8.6c-1 0-1.6.4-1.6 1.1 0 .8 1 1.1 2.3 1.6 2 .7 3.7 1.6 3.7 3.8 0 2.5-2 4-4.9 4-1.5 0-3.1-.4-4.4-1v-3c1.2.7 2.7 1.2 4.1 1.2 1 0 1.7-.4 1.7-1.1 0-.9-1.1-1.2-2.5-1.7-1.9-.7-3.5-1.6-3.5-3.7 0-2.3 1.8-3.9 4.6-3.9 1.3 0 2.6.3 3.7.8v3c-1-.6-2.3-1.1-3.2-1.1Z"/></svg>
+        Donar con Stripe
+      </a>
+      <div class="modal-note">Serás redirigido a un sitio externo y seguro para completar la donación.</div>
+    </div>
+  </div>
+  
+  <div id="main">
+    <div id="toolrail">
+      <button class="tool-btn active" id="toolPen" title="Pluma — trazar nodos (P)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+      </button>
+      <button class="tool-btn" id="toolSelect" title="Seleccionar / Editar (V)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="tool-btn" id="toolImage" title="Insertar imagen de referencia">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="tool-btn" id="toolDelete" title="Eliminar nodo/trayecto seleccionado (Del)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+	
+    <div id="canvasWrap">
+      <svg id="stage" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="gridMinor" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e5eb" stroke-width="1"/>
+          </pattern>
+          <pattern id="gridMajor" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="url(#gridMinor)"/>
+            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#d3d8e2" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect id="gridRect" x="0" y="0" width="100%" height="100%" fill="url(#gridMajor)"></rect>
+        <g id="viewport">
+          <g id="bgLayer"></g>
+          <g id="pathsLayer"></g>
+          <g id="overlayLayer"></g>
+        </g>
+      </svg>
+      <div id="hint">Haz clic para colocar nodos. Arrastra al colocar un nodo para crear una curva.</div>
+      <div id="zoomIndicator">Zoom 100%</div>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <div id="sidebar">
+      <div class="sb-header">Propiedades y Ajustes</div>
+      <div class="sb-tabs">
+        <button class="sb-tab active" data-tab="style" title="Estilo y trayectoria">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+        </button>
+        <button class="sb-tab" data-tab="layers" title="Capas y trayectorias">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 4.9-9 4.9-9-4.9L12 2z"/><path d="m3 12 9 4.9 9-4.9"/><path d="m3 17 9 4.9 9-4.9"/></svg>
+        </button>
+        <button class="sb-tab" data-tab="canvas" title="Imagen y lienzo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+        </button>
+        <button class="sb-tab" data-tab="help" title="Ayuda e información">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg>
+        </button>
+      </div>
+
+      <div class="sb-body" id="panelStyle">
+        <div class="sb-section-title">Propiedades del trazo</div>
+        <div id="noPathMsg" class="empty-note">Selecciona o dibuja una trayectoria para ver sus propiedades.</div>
+        <div id="pathProps" style="display:none;">
+          <div class="stat-row"><span class="stat-label">Longitud total</span></div>
+          <div class="stat-big" id="statLength">0.0 cm</div>
+          <div class="stat-sub" id="statLengthSub">&nbsp;</div>
+
+          <div class="field" style="margin-top:16px;">
+            <label>Corte de Flex (cm)</label>
+            <input type="number" id="inputBaseCm" min="0.5" step="0.5" value="3">
+          </div>
+          <div class="field">
+            <label>Ajuste Automático</label>
+            <select id="selectSnap">
+              <option value="lower">A Múltiplo Inferior</option>
+              <option value="none">Sin Ajuste Automático</option>
+            </select>
+          </div>
+
+          <div class="sb-section-title">Ancho y Alto</div>
+          <div class="field row" style="display:flex;gap:8px;">
+            <div style="flex:1;">
+              <label>Ancho (cm)</label>
+              <input type="number" id="inputBboxW" min="0.1" step="0.1">
+            </div>
+            <div style="flex:1;">
+              <label>Alto (cm)</label>
+              <input type="number" id="inputBboxH" min="0.1" step="0.1">
+            </div>
+          </div>
+
+          <div class="sb-section-title">Grosor de línea</div>
+          <div class="field">
+            <div class="row">
+              <input type="range" id="inputStroke" min="0.2" max="12" step="0.1" value="1.1">
+              <span class="range-out" id="strokeOut">1.1 mm</span>
+            </div>
+          </div>
+
+          <div class="sb-section-title">Tipo de línea</div>
+          <div class="field">
+            <div class="seg" id="segLineType">
+              <button data-val="solid" class="active">Sólido</button>
+              <button data-val="dashed">Punteado</button>
+              <button data-val="dotted">Discontinuo</button>
+            </div>
+          </div>
+
+          <div class="sb-section-title">Edición de nodo</div>
+          <div class="field">
+            <label>Tipo de nodo:</label>
+            <div class="seg" id="segNodeType">
+              <button data-val="line">Línea recta</button>
+              <button data-val="curve">Curva</button>
+            </div>
+          </div>
+          <div class="field">
+            <label style="margin-bottom:10px;">Modo de Manipulador:</label>
+            <div class="mode-grid" id="modeGrid">
+              <div class="mode-card" id="modeSymmetric" data-mode="symmetric">
+                <svg width="34" height="20" viewBox="0 0 34 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 14c6-10 12 6 15-2"/><circle cx="17" cy="10" r="2" fill="currentColor" stroke="none"/><circle cx="2" cy="14" r="1.6" fill="currentColor" stroke="none"/><circle cx="32" cy="2" r="1.6" fill="currentColor" stroke="none"/></svg>
+                <div class="t">SIMÉTRICO</div>
+                <div class="s">(Suave)</div>
+              </div>
+              <div class="mode-card" id="modeIndependent" data-mode="independent">
+                <svg width="34" height="20" viewBox="0 0 34 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4l13 10 17-8"/><circle cx="15" cy="14" r="2" fill="currentColor" stroke="none"/><circle cx="2" cy="4" r="1.6" fill="currentColor" stroke="none"/><circle cx="32" cy="6" r="1.6" fill="currentColor" stroke="none"/></svg>
+                <div class="t">INDEPENDIENTE</div>
+                <div class="s">(Cúspide)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-box">
+            Arrastra manecillas para crear curvas.<br>
+            Mantén <b>Alt</b> mientras arrastras para independizar temporalmente. Doble clic en un nodo para fijar el modo.
+          </div>
+
+          <div class="field" style="margin-top:16px;">
+            <button class="btn danger small" id="btnDeletePath">Eliminar trayectoria</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-body" id="panelLayers" style="display:none;">
+        <div class="sb-section-title">Trayectorias (<span id="pathCount">0</span>)</div>
+        <div id="layerList"></div>
+        <div id="layerEmpty" class="empty-note">Aún no hay trayectorias.<br>Usa la herramienta Pluma para empezar a dibujar.</div>
+        <button class="btn" id="btnNewPath" style="margin-top:8px;">+ Nueva trayectoria</button>
+      </div>
+
+      <div class="sb-body" id="panelCanvas" style="display:none;">
+        <div class="sb-section-title">Imagen de Referencia</div>
+        <button class="btn" id="btnInsertImage">Insertar imagen…</button>
+        <div id="bgControls" style="display:none; margin-top:14px;">
+          <div class="field">
+            <div class="row" style="justify-content:space-between; margin-bottom:8px;">
+              <label style="margin:0;">Tamaño de la imagen (cm)</label>
+              <button class="lock-btn" id="bgLockAspect" title="Bloquear relación de aspecto">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field row" style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <label>Ancho (cm)</label>
+              <input type="number" id="bgW" min="0.1" step="0.1">
+            </div>
+            <div style="flex:1;">
+              <label>Alto (cm)</label>
+              <input type="number" id="bgH" min="0.1" step="0.1">
+            </div>
+          </div>
+          <div class="field">
+            <label>Opacidad</label>
+            <div class="row">
+              <input type="range" id="bgOpacity" min="0.1" max="1" step="0.05" value="0.6">
+              <span class="range-out" id="bgOpacityOut">60%</span>
+            </div>
+          </div>
+          <button class="btn danger small" id="btnRemoveBg">Quitar imagen</button>
+        </div>
+        <div class="sb-section-title">Vista</div>
+        <button class="btn small" id="btnResetView">Restablecer zoom / posición</button>
+        <div class="hint-box" style="margin-top:18px;">
+          <b>Zoom:</b> rueda del mouse sobre el lienzo.<br>
+          <b>Desplazar:</b> mantén <b>Espacio</b> y arrastra.<br>
+          <b>Nueva trayectoria:</b> presiona <b>Esc</b> o Enter mientras dibujas para terminar la actual.
+        </div>
+      </div>
+
+      <div class="sb-body" id="panelHelp" style="display:none;">
+        <div class="help-greeting">Hola, estamos aquí para ayudarte</div>
+
+        <ul class="help-list">
+          <li><b>Herramienta pluma:</b> se activa con el botón correspondiente o con la tecla <kbd>P</kbd>. Sirve para realizar trazados.</li>
+          <li><b>Herramienta selección:</b> se activa con el botón o con la tecla <kbd>V</kbd>. Permite seleccionar nodos.</li>
+          <li><b>Desplazar lienzo:</b> presiona la barra espaciadora y arrastra.</li>
+          <li><b>Zoom:</b> usa la rueda del mouse.</li>
+          <li><b>Propiedades del trazado:</b> en el panel lateral puedes elegir entre línea recta o curva, continua, punteada o discontinua.</li>
+          <li><b>Nodos y manipuladores:</b> en curvas se usan manipuladores, que pueden ser simétricos o independientes.</li>
+          <li><b>Capas:</b> pestaña para observar, seleccionar o eliminar trazos en el lienzo.</li>
+          <li><b>Imágenes:</b> pestaña para insertar imágenes de referencia (solo una a la vez).</li>
+        </ul>
+
+        <div class="sb-section-title">Acerca de NeónFlex Design</div>
+        <p class="help-p">
+          Este programa es propiedad de <b>CarriotBrain Development</b>, y está diseñado para la creación y edición de trazados vectoriales de manera intuitiva.
+        </p>
+        <p class="help-p">
+          Combina herramientas rápidas de teclado con paneles visuales para que el usuario pueda trabajar de forma ágil y organizada.
+        </p>
+        <p class="help-p">
+          Su objetivo es ofrecer un entorno accesible para estudiantes, diseñadores y creativos que necesiten producir gráficos precisos y personalizables.
+        </p>
+        <p class="help-p help-note">
+          CarriotBrain Development es una división de CarriotBrain Technologies.
+        </p>
+
+        <div class="sb-section-title">Términos y condiciones</div>
+        <ul class="help-list">
+          <li>El programa es de uso libre sin restricciones en tiempo o cantidad, el código cuenta con derechos de autor.</li>
+          <li>El programa se ofrece tal cual, sin garantías de funcionamiento en todos los sistemas.</li>
+          <li>El usuario es responsable del uso de las herramientas y de los contenidos creados.</li>
+          <li>Las imágenes insertadas como referencia deben respetar derechos de autor y licencias correspondientes.</li>
+          <li>El software no almacena ni comparte información personal sin consentimiento.</li>
+          <li>El uso indebido del programa para fines ilegales o no autorizados queda estrictamente prohibido.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     CONSTANTES Y ESTADO GLOBAL
+  ===================================================================== */
+  const CM_TO_PX = 37.8;         // Conversión estándar de pantalla: 1 cm = 37.8 px
+  const MM_TO_PX = CM_TO_PX / 10; // 1 mm = 3.78 px (usado para el grosor de línea)
+  const NODE_R = 5;              // Radio visual (screen-space) de los nodos
+  const HANDLE_R = 4;            // Radio visual de las manecillas
+  const HIT_PAD = 8;             // Tolerancia de clic adicional en px de pantalla
+
+  const state = {
+    tool: 'pen',                 // 'pen' | 'select'
+    paths: [],                   // lista de trayectorias
+    activePathId: null,          // trayectoria que se está trazando actualmente
+    selection: { pathId: null, nodeIndex: null },
+    view: { x: 0, y: 0, zoom: 1 },
+    spaceDown: false,
+    isPanning: false,
+    panStart: null,
+    dragging: null,              // descriptor de arrastre en curso
+    bg: null,                    // imagen de referencia { href, x, y, w, h, opacity, naturalW, naturalH }
+    showGrid: true,
+    showMeasurements: true,
+    history: [],
+    future: [],
+    pathCounter: 0,
+  };
+
+  let pathIdSeq = 1;
+
+  /* =====================================================================
+     UTILIDADES GEOMÉTRICAS
+  ===================================================================== */
+
+  // Distancia euclidiana entre dos puntos
+  function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  // Refleja un punto `moved` respecto a `center`, preservando la distancia
+  // exacta (usado para el modo "Simétrico"): B' = C - (A - C) = 2C - A
+  function mirrorPoint(center, moved){
+    return { x: center.x * 2 - moved.x, y: center.y * 2 - moved.y };
+  }
+
+  // Convierte coordenadas de pantalla (clientX/clientY) a coordenadas de
+  // "mundo" (el sistema de coordenadas interno donde viven los nodos,
+  // independiente del zoom/pan actual).
+  function screenToWorld(clientX, clientY){
+    const rect = svg.getBoundingClientRect();
+    const sx = clientX - rect.left;
+    const sy = clientY - rect.top;
+    return {
+      x: (sx - state.view.x) / state.view.zoom,
+      y: (sy - state.view.y) / state.view.zoom,
+    };
+  }
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  /* =====================================================================
+     MODELO DE DATOS: TRAYECTORIAS Y NODOS
+     Cada nodo: { x, y, hIn:{x,y}|null, hOut:{x,y}|null, mode:'symmetric'|'independent' }
+     hIn/hOut son coordenadas ABSOLUTAS (mundo) de las manecillas de control.
+     Si un segmento no tiene manecillas relevantes, se dibuja como línea recta (L).
+  ===================================================================== */
+
+  function createPath(){
+    pathIdSeq += 1;
+    return {
+      id: 'path-' + pathIdSeq,
+      name: 'Trayectoria ' + (state.paths.length + 1),
+      nodes: [],
+      style: { strokeWidth: 1.1 * MM_TO_PX, lineType: 'solid', color: '#1c2333' },
+      baseCm: 3,
+      snapMode: 'lower',
+      lengths: { originalPx: 0, originalCm: 0, adjustedPx: 0, adjustedCm: 0 },
+      dasharrayFinal: null,   // patrón de recorte final aplicado tras mouseup
+    };
+  }
+
+  function getPath(id){ return state.paths.find(p => p.id === id); }
+  function getSelectedPath(){ return state.selection.pathId ? getPath(state.selection.pathId) : null; }
+  function getSelectedNode(){
+    const p = getSelectedPath();
+    if(!p || state.selection.nodeIndex === null) return null;
+    return p.nodes[state.selection.nodeIndex] || null;
+  }
+
+  // Construye el atributo "d" de un <path> SVG a partir de la lista de nodos.
+  function buildPathD(nodes){
+    if(nodes.length === 0) return '';
+    let d = `M ${nodes[0].x} ${nodes[0].y}`;
+    for(let i = 1; i < nodes.length; i++){
+      const prev = nodes[i-1], cur = nodes[i];
+      const hasCurve = !!(prev.hOut || cur.hIn);
+      if(hasCurve){
+        const c1 = prev.hOut || { x: prev.x, y: prev.y };
+        const c2 = cur.hIn || { x: cur.x, y: cur.y };
+        d += ` C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${cur.x} ${cur.y}`;
+      } else {
+        d += ` L ${cur.x} ${cur.y}`;
+      }
+    }
+    return d;
+  }
+
+  /* =====================================================================
+     LÓGICA DE RESTRICCIÓN DE LONGITUD (REDONDEO INFERIOR)
+     Se ejecuta en cada `mouseup` tras trazar o modificar un nodo/manecilla.
+  ===================================================================== */
+
+  // Elemento <path> oculto reutilizado sólo para medir longitudes con
+  // el método nativo getTotalLength(), que opera en unidades locales del
+  // "d" (por eso el zoom/pan no afecta el cálculo: siempre son cm reales).
+  const measurer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+  function recomputePathLength(path){
+    const d = buildPathD(path.nodes);
+    if(!d || path.nodes.length < 2){
+      path.lengths = { originalPx: 0, originalCm: 0, adjustedPx: 0, adjustedCm: 0 };
+      path.dasharrayFinal = null;
+      return;
+    }
+    measurer.setAttribute('d', d);
+    const originalPx = measurer.getTotalLength();
+    const originalCm = originalPx / CM_TO_PX;
+
+    let adjustedCm = originalCm;
+    if(path.snapMode === 'lower' && path.baseCm > 0){
+      // ALGORITMO DE REDONDEO INFERIOR:
+      // Se calcula cuántas "medidas base" completas caben en la longitud
+      // actual (Math.floor) y se multiplica de vuelta -> siempre <= original.
+      // Ej. base=3cm: 22cm -> floor(22/3)=7 -> 7*3=21cm ; 17cm -> floor(17/3)=5 -> 15cm
+      const steps = Math.floor((originalCm / path.baseCm) + 1e-6);
+      adjustedCm = steps * path.baseCm;
+    }
+    const adjustedPx = adjustedCm * CM_TO_PX;
+
+    path.lengths = { originalPx, originalCm, adjustedPx, adjustedCm };
+    path.dasharrayFinal = buildTrimDasharray(path, adjustedPx, originalPx);
+  }
+
+  // Genera un stroke-dasharray que (a) respeta el patrón visual elegido
+  // (sólido / discontinuo / punteado) y (b) oculta todo lo que exceda la
+  // longitud ajustada, simulando un "recorte" limpio de la trayectoria.
+  function buildTrimDasharray(path, adjustedPx, totalPx){
+    if(adjustedPx <= 0) return `0 ${Math.max(totalPx, 1) + 2000}`; // oculta todo
+
+    const sw = path.style.strokeWidth;
+    let unit; // patrón base [trazo, hueco] en px
+    if(path.style.lineType === 'dashed') unit = [sw * 2.6, sw * 1.4];
+    else if(path.style.lineType === 'dotted') unit = [sw * 0.01, sw * 1.7];
+    else unit = null; // sólido
+
+    if(!unit){
+      // Recorte simple: dibuja hasta adjustedPx, luego un hueco gigante.
+      return `${adjustedPx} ${Math.max(totalPx, adjustedPx) + 2000}`;
+    }
+
+    // Repite el patrón hasta cubrir la longitud ajustada, y termina con un
+    // hueco enorme para que nada se dibuje después del punto de recorte.
+    const segs = [];
+    let acc = 0;
+    let guard = 0;
+    while(acc < adjustedPx && guard < 5000){
+      segs.push(unit[0].toFixed(2), unit[1].toFixed(2));
+      acc += unit[0] + unit[1];
+      guard++;
+    }
+    segs.push((Math.max(totalPx, adjustedPx) + 2000).toFixed(2));
+    return segs.join(' ');
+  }
+
+  /* =====================================================================
+     HISTORIAL (UNDO / REDO)
+  ===================================================================== */
+
+  function snapshot(){
+    return JSON.stringify({
+      paths: state.paths,
+      bg: state.bg,
+      selection: state.selection,
+    });
+  }
+
+  function pushHistory(){
+    state.history.push(snapshot());
+    if(state.history.length > 60) state.history.shift();
+    state.future.length = 0;
+    updateUndoRedoButtons();
+  }
+
+  function restoreSnapshot(json){
+    const data = JSON.parse(json);
+    state.paths = data.paths;
+    state.bg = data.bg;
+    state.selection = data.selection || { pathId: null, nodeIndex: null };
+    renderAll();
+  }
+
+  function undo(){
+    if(state.history.length === 0) return;
+    state.future.push(snapshot());
+    const prev = state.history.pop();
+    restoreSnapshot(prev);
+    updateUndoRedoButtons();
+  }
+  function redo(){
+    if(state.future.length === 0) return;
+    state.history.push(snapshot());
+    const next = state.future.pop();
+    restoreSnapshot(next);
+    updateUndoRedoButtons();
+  }
+  function updateUndoRedoButtons(){
+    document.getElementById('btnUndo').disabled = state.history.length === 0;
+    document.getElementById('btnRedo').disabled = state.future.length === 0;
+  }
+
+  /* =====================================================================
+     REFERENCIAS DOM
+  ===================================================================== */
+  const svg = document.getElementById('stage');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const viewport = document.getElementById('viewport');
+  const bgLayer = document.getElementById('bgLayer');
+  const pathsLayer = document.getElementById('pathsLayer');
+  const overlayLayer = document.getElementById('overlayLayer');
+  const gridRect = document.getElementById('gridRect');
+  const zoomIndicator = document.getElementById('zoomIndicator');
+  const hintEl = document.getElementById('hint');
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    if(attrs) for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  /* =====================================================================
+     RENDER: VIEWPORT (ZOOM / PAN) Y CUADRÍCULA
+  ===================================================================== */
+
+  function applyViewTransform(){
+    viewport.setAttribute('transform',
+      `translate(${state.view.x} ${state.view.y}) scale(${state.view.zoom})`);
+    zoomIndicator.textContent = `Zoom ${Math.round(state.view.zoom * 100)}%`;
+    gridRect.setAttribute('fill', state.showGrid ? 'url(#gridMajor)' : 'transparent');
+  }
+
+  /* =====================================================================
+     RENDER: IMAGEN DE FONDO (REFERENCIA)
+  ===================================================================== */
+
+  function renderBg(){
+    bgLayer.innerHTML = '';
+    if(!state.bg) return;
+    const b = state.bg;
+    const img = el('image', {
+      href: b.href, x: b.x, y: b.y, width: b.w, height: b.h,
+      opacity: b.opacity, preserveAspectRatio: 'none',
+    });
+    img.style.cursor = state.tool === 'select' ? 'move' : 'default';
+    bgLayer.appendChild(img);
+
+    if(state.tool === 'select'){
+      img.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        const p = screenToWorld(e.clientX, e.clientY);
+        state.dragging = { type: 'bg-move', startWorld: p, orig: { x: b.x, y: b.y } };
+      });
+      // Manecillas de esquina para redimensionar la imagen de referencia
+      const corners = [
+        ['nw', b.x, b.y], ['ne', b.x + b.w, b.y],
+        ['sw', b.x, b.y + b.h], ['se', b.x + b.w, b.y + b.h],
+      ];
+      corners.forEach(([pos, cx, cy]) => {
+        const r = el('rect', {
+          x: cx - HANDLE_R / state.view.zoom, y: cy - HANDLE_R / state.view.zoom,
+          width: (HANDLE_R * 2) / state.view.zoom, height: (HANDLE_R * 2) / state.view.zoom,
+          fill: '#ffffff', stroke: '#f59e0b', 'stroke-width': 1.5 / state.view.zoom,
+        });
+        r.style.cursor = (pos === 'nw' || pos === 'se') ? 'nwse-resize' : 'nesw-resize';
+        r.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          state.dragging = { type: 'bg-resize', corner: pos, orig: { x: b.x, y: b.y, w: b.w, h: b.h } };
+        });
+        bgLayer.appendChild(r);
+      });
+    }
+  }
+
+  /* =====================================================================
+     RENDER: TRAYECTORIAS
+  ===================================================================== */
+
+  function renderPaths(){
+    pathsLayer.innerHTML = '';
+    state.paths.forEach(path => {
+      const d = buildPathD(path.nodes);
+      if(!d) return;
+      const isDragging = state.dragging && state.dragging.pathId === path.id;
+      const pEl = el('path', {
+        d,
+        fill: 'none',
+        stroke: path.style.color,
+        'stroke-width': path.style.strokeWidth,
+        'stroke-linecap': path.style.lineType === 'dotted' ? 'round' : 'round',
+        'stroke-linejoin': 'round',
+      });
+      // Mientras se arrastra, mostramos el trazo completo (sin recorte) para
+      // dar feedback fluido; al soltar (mouseup) se aplica el recorte final.
+      if(!isDragging && path.dasharrayFinal){
+        pEl.setAttribute('stroke-dasharray', path.dasharrayFinal);
+      }
+      pEl.style.cursor = state.tool === 'select' ? 'pointer' : 'default';
+      if(state.selection.pathId === path.id){
+        pEl.setAttribute('stroke', '#2563eb');
+      }
+      pEl.addEventListener('mousedown', (e) => {
+        if(state.tool !== 'select') return;
+        e.stopPropagation();
+        state.selection.pathId = path.id;
+        state.selection.nodeIndex = null;
+        const world = screenToWorld(e.clientX, e.clientY);
+        state.dragging = { type: 'path-move', pathId: path.id, startWorld: world,
+          origNodes: JSON.parse(JSON.stringify(path.nodes)) };
+        renderAll();
+      });
+      pathsLayer.appendChild(pEl);
+    });
+  }
+
+  /* =====================================================================
+     RENDER: OVERLAY (NODOS, MANECILLAS, BOUNDING BOX)
+  ===================================================================== */
+
+  function pathBBox(path){
+    if(path.nodes.length === 0) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    path.nodes.forEach(n => {
+      [n, n.hIn, n.hOut].forEach(pt => {
+        if(!pt) return;
+        minX = Math.min(minX, pt.x); maxX = Math.max(maxX, pt.x);
+        minY = Math.min(minY, pt.y); maxY = Math.max(maxY, pt.y);
+      });
+    });
+    return { minX, minY, maxX, maxY };
+  }
+
+  // Bounding box estricta usando sólo puntos de anclaje (para medir el
+  // "tamaño de la figura" tal como la percibe el usuario, sin manecillas).
+  function pathAnchorBBox(path){
+    if(path.nodes.length === 0) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    path.nodes.forEach(n => {
+      minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+      minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
+    });
+    return { minX, minY, maxX, maxY };
+  }
+
+  function renderOverlay(){
+    overlayLayer.innerHTML = '';
+    const zoom = state.view.zoom;
+    const sel = getSelectedPath();
+
+    // --- Bounding box + medidas (ancho/alto) del path seleccionado ---
+    if(sel && state.showMeasurements && sel.nodes.length > 0){
+      const bb = pathAnchorBBox(sel);
+      const pad = 18 / zoom;
+      // caja punteada
+      overlayLayer.appendChild(el('rect', {
+        x: bb.minX, y: bb.minY, width: Math.max(bb.maxX - bb.minX, 0.01), height: Math.max(bb.maxY - bb.minY, 0.01),
+        fill: 'none', stroke: '#94a3b8', 'stroke-width': 1 / zoom, 'stroke-dasharray': `${4/zoom} ${3/zoom}`,
+      }));
+
+      // Flecha de ancho (arriba)
+      const midY = bb.minY - pad;
+      const wLine = el('line', { x1: bb.minX, y1: midY, x2: bb.maxX, y2: midY, stroke:'#64748b', 'stroke-width': 1/zoom });
+      overlayLayer.appendChild(wLine);
+      [bb.minX, bb.maxX].forEach(x => {
+        overlayLayer.appendChild(el('line', { x1:x, y1: midY - 4/zoom, x2:x, y2: midY + 4/zoom, stroke:'#64748b', 'stroke-width':1/zoom }));
+      });
+      const wText = el('text', {
+        x: (bb.minX + bb.maxX)/2, y: midY - 6/zoom, 'text-anchor':'middle',
+        'font-size': 12/zoom, fill:'#334155', 'font-family':'ui-monospace, monospace',
+      });
+      wText.textContent = ((bb.maxX - bb.minX)/CM_TO_PX).toFixed(1) + ' cm';
+      overlayLayer.appendChild(wText);
+
+      // Flecha de alto (izquierda)
+      const midX = bb.minX - pad;
+      overlayLayer.appendChild(el('line', { x1:midX, y1:bb.minY, x2:midX, y2:bb.maxY, stroke:'#64748b', 'stroke-width':1/zoom }));
+      [bb.minY, bb.maxY].forEach(y => {
+        overlayLayer.appendChild(el('line', { x1:midX-4/zoom, y1:y, x2:midX+4/zoom, y2:y, stroke:'#64748b', 'stroke-width':1/zoom }));
+      });
+      const hText = el('text', {
+        x: midX - 6/zoom, y: (bb.minY+bb.maxY)/2, 'text-anchor':'end', 'dominant-baseline':'middle',
+        'font-size': 12/zoom, fill:'#334155', 'font-family':'ui-monospace, monospace',
+        transform: `rotate(-90 ${midX - 6/zoom} ${(bb.minY+bb.maxY)/2})`,
+      });
+      hText.textContent = ((bb.maxY - bb.minY)/CM_TO_PX).toFixed(1) + ' cm';
+      overlayLayer.appendChild(hText);
+
+      // Manecillas de esquina para redimensionar la trayectoria completa
+      if(state.tool === 'select'){
+        const corners = [
+          ['nw', bb.minX, bb.minY], ['ne', bb.maxX, bb.minY],
+          ['sw', bb.minX, bb.maxY], ['se', bb.maxX, bb.maxY],
+        ];
+        corners.forEach(([pos, cx, cy]) => {
+          const r = el('rect', {
+            x: cx - 5/zoom, y: cy - 5/zoom, width: 10/zoom, height: 10/zoom,
+            fill:'#ffffff', stroke:'#2563eb', 'stroke-width': 1.5/zoom,
+          });
+          r.style.cursor = (pos==='nw'||pos==='se') ? 'nwse-resize' : 'nesw-resize';
+          r.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            state.dragging = {
+              type: 'path-resize', pathId: sel.id, corner: pos,
+              bboxOrig: bb, origNodes: JSON.parse(JSON.stringify(sel.nodes)),
+            };
+          });
+          overlayLayer.appendChild(r);
+        });
+      }
+    }
+
+    // --- Nodos y manecillas de todas las trayectorias (modo selección) ---
+    state.paths.forEach(path => {
+      const isSelPath = state.selection.pathId === path.id;
+      path.nodes.forEach((node, idx) => {
+        const isSelNode = isSelPath && state.selection.nodeIndex === idx;
+
+        // Sólo mostramos manecillas del nodo activo/seleccionado (o del que
+        // se está trazando en este instante) para mantener el lienzo limpio.
+        const showHandles = (state.tool === 'pen' && path.id === state.activePathId && idx === path.nodes.length - 1)
+          || (state.tool === 'select' && isSelNode);
+
+        if(showHandles){
+          [['hIn', node.hIn], ['hOut', node.hOut]].forEach(([key, h]) => {
+            if(!h) return;
+            overlayLayer.appendChild(el('line', {
+              x1: node.x, y1: node.y, x2: h.x, y2: h.y,
+              stroke: '#9aa4bd', 'stroke-width': 1.2/zoom,
+            }));
+            const hc = el('circle', {
+              cx: h.x, cy: h.y, r: HANDLE_R/zoom,
+              fill: '#ffffff', stroke: '#f59e0b', 'stroke-width': 1.6/zoom,
+            });
+            hc.classList.add('node-handle');
+            hc.addEventListener('mousedown', (e) => {
+              e.stopPropagation();
+              state.selection = { pathId: path.id, nodeIndex: idx };
+              state.dragging = { type: 'handle-drag', pathId: path.id, nodeIndex: idx, which: key };
+              renderAll();
+            });
+            overlayLayer.appendChild(hc);
+          });
+        }
+
+        const nc = el('circle', {
+          cx: node.x, cy: node.y, r: (isSelNode ? NODE_R + 1.5 : NODE_R)/zoom,
+          fill: isSelNode ? '#3b82f6' : '#ffffff',
+          stroke: '#3b82f6', 'stroke-width': (isSelNode ? 3 : 1.6)/zoom,
+        });
+        nc.classList.add('grab-handle');
+        nc.addEventListener('mousedown', (e) => {
+          if(state.tool !== 'select') return;
+          e.stopPropagation();
+          state.selection = { pathId: path.id, nodeIndex: idx };
+          const world = screenToWorld(e.clientX, e.clientY);
+          state.dragging = { type: 'node-move', pathId: path.id, nodeIndex: idx, startWorld: world,
+            origNode: JSON.parse(JSON.stringify(node)) };
+          renderAll();
+        });
+        nc.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          toggleNodeMode(path, idx);
+        });
+        overlayLayer.appendChild(nc);
+      });
+    });
+  }
+
+  // Alterna el modo del nodo entre "symmetric" e "independent" (doble clic).
+  // Al pasar a "symmetric" alineamos inmediatamente las manecillas para
+  // evitar un salto brusco en la curva.
+  function toggleNodeMode(path, idx){
+    const node = path.nodes[idx];
+    node.mode = node.mode === 'symmetric' ? 'independent' : 'symmetric';
+    if(node.mode === 'symmetric'){
+      if(node.hOut && node.hIn){
+        // promedia distancias reflejando hOut sobre hIn como referencia
+        node.hIn = mirrorPoint(node, node.hOut);
+      } else if(node.hOut){
+        node.hIn = mirrorPoint(node, node.hOut);
+      } else if(node.hIn){
+        node.hOut = mirrorPoint(node, node.hIn);
+      }
+    }
+    recomputePathLength(path);
+    pushHistory();
+    renderAll();
+  }
+
+  /* =====================================================================
+     RENDER GLOBAL + PANEL LATERAL
+  ===================================================================== */
+
+  function renderAll(){
+    applyViewTransform();
+    renderBg();
+    renderPaths();
+    renderOverlay();
+    renderSidebar();
+    updateHint();
+  }
+
+  function updateHint(){
+    if(state.tool === 'pen'){
+      hintEl.textContent = state.activePathId
+        ? 'Clic para añadir el siguiente nodo. Arrastra para curvar. Esc o Enter para terminar la trayectoria.'
+        : 'Haz clic para colocar nodos. Arrastra al colocar un nodo para crear una curva.';
+    } else if(state.tool === 'select'){
+      hintEl.textContent = 'Arrastra nodos o manecillas para editar. Doble clic en un nodo alterna Simétrico/Independiente. Alt+arrastre = independiente temporal.';
+    } else {
+      hintEl.textContent = 'Haz clic sobre el lienzo para colocar la imagen de referencia.';
+    }
+  }
+
+  function renderSidebar(){
+    const path = getSelectedPath();
+    const noMsg = document.getElementById('noPathMsg');
+    const props = document.getElementById('pathProps');
+
+    if(!path){
+      noMsg.style.display = 'block';
+      props.style.display = 'none';
+    } else {
+      noMsg.style.display = 'none';
+      props.style.display = 'block';
+
+      document.getElementById('statLength').textContent = path.lengths.adjustedCm.toFixed(1) + ' cm';
+      document.getElementById('statLengthSub').textContent =
+        Math.abs(path.lengths.adjustedCm - path.lengths.originalCm) > 0.01
+          ? `(Adjusted from ${path.lengths.originalCm.toFixed(1)} cm)`
+          : '(Sin ajuste — longitud exacta)';
+
+      document.getElementById('inputBaseCm').value = path.baseCm;
+      document.getElementById('selectSnap').value = path.snapMode;
+      document.getElementById('inputStroke').value = (path.style.strokeWidth / MM_TO_PX).toFixed(1);
+      document.getElementById('strokeOut').textContent = (path.style.strokeWidth / MM_TO_PX).toFixed(1) + ' mm';
+
+      const bb = pathAnchorBBox(path);
+      if(bb){
+        document.getElementById('inputBboxW').value = ((bb.maxX - bb.minX) / CM_TO_PX).toFixed(2);
+        document.getElementById('inputBboxH').value = ((bb.maxY - bb.minY) / CM_TO_PX).toFixed(2);
+      }
+
+      document.querySelectorAll('#segLineType button').forEach(b => {
+        b.classList.toggle('active', b.dataset.val === path.style.lineType);
+      });
+
+      const node = getSelectedNode();
+      document.querySelectorAll('#segNodeType button').forEach(b => {
+        const isCurveBtn = b.dataset.val === 'curve';
+        b.classList.toggle('active', !!node && nodeHasCurve(node) === isCurveBtn);
+        b.disabled = !node;
+      });
+      const symCard = document.getElementById('modeSymmetric');
+      const indCard = document.getElementById('modeIndependent');
+      symCard.classList.toggle('active', !!node && node.mode === 'symmetric');
+      indCard.classList.toggle('active', !!node && node.mode === 'independent');
+      symCard.classList.toggle('disabled', !node);
+      indCard.classList.toggle('disabled', !node);
+    }
+
+    // Panel de capas
+    const list = document.getElementById('layerList');
+    const empty = document.getElementById('layerEmpty');
+    document.getElementById('pathCount').textContent = state.paths.length;
+    list.innerHTML = '';
+    if(state.paths.length === 0){
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      state.paths.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'layer-item' + (state.selection.pathId === p.id ? ' active' : '');
+        item.innerHTML = `
+          <div class="swatch" style="background:${p.style.color}"></div>
+          <div class="name">${p.name}</div>
+          <div class="len">${p.lengths.adjustedCm.toFixed(1)}cm</div>
+          <button class="del" title="Eliminar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>`;
+        item.addEventListener('click', (e) => {
+          if(e.target.closest('.del')) return;
+          state.selection = { pathId: p.id, nodeIndex: null };
+          renderAll();
+        });
+        item.querySelector('.del').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deletePath(p.id);
+        });
+        list.appendChild(item);
+      });
+    }
+
+    // Panel de imagen de fondo
+    const bgControls = document.getElementById('bgControls');
+    if(state.bg){
+      bgControls.style.display = 'block';
+      document.getElementById('bgW').value = (state.bg.w / CM_TO_PX).toFixed(2);
+      document.getElementById('bgH').value = (state.bg.h / CM_TO_PX).toFixed(2);
+      document.getElementById('bgOpacity').value = state.bg.opacity;
+      document.getElementById('bgOpacityOut').textContent = Math.round(state.bg.opacity * 100) + '%';
+      document.getElementById('bgLockAspect').classList.toggle('on', state.bg.lockAspect);
+    } else {
+      bgControls.style.display = 'none';
+    }
+
+    updateUndoRedoButtons();
+  }
+
+  function deletePath(id){
+    state.paths = state.paths.filter(p => p.id !== id);
+    if(state.selection.pathId === id) state.selection = { pathId: null, nodeIndex: null };
+    if(state.activePathId === id) state.activePathId = null;
+    pushHistory();
+    renderAll();
+  }
+
+  /* =====================================================================
+     HERRAMIENTA PLUMA — TRAZADO DE NODOS
+  ===================================================================== */
+
+  function onPenMouseDown(e){
+    const p = screenToWorld(e.clientX, e.clientY);
+    let path = state.activePathId ? getPath(state.activePathId) : null;
+    if(!path){
+      path = createPath();
+      state.paths.push(path);
+      state.activePathId = path.id;
+      state.selection = { pathId: path.id, nodeIndex: null };
+    }
+    const node = { x: p.x, y: p.y, hIn: null, hOut: null, mode: 'symmetric' };
+    path.nodes.push(node);
+    state.selection.nodeIndex = path.nodes.length - 1;
+    state.dragging = {
+      type: 'new-node-handle', pathId: path.id, nodeIndex: path.nodes.length - 1,
+      startWorld: p, moved: false,
+    };
+    renderAll();
+  }
+
+  /* =====================================================================
+     MANEJO DE ARRASTRE GLOBAL (mousemove / mouseup)
+  ===================================================================== */
+
+  function onStageMouseMove(e){
+    if(state.isPanning){
+      const dx = e.clientX - state.panStart.clientX;
+      const dy = e.clientY - state.panStart.clientY;
+      state.view.x = state.panStart.viewX + dx;
+      state.view.y = state.panStart.viewY + dy;
+      applyViewTransform();
+      return;
+    }
+
+    const drag = state.dragging;
+    if(!drag) return;
+    const world = screenToWorld(e.clientX, e.clientY);
+
+    if(drag.type === 'new-node-handle'){
+      const path = getPath(drag.pathId);
+      const node = path.nodes[drag.nodeIndex];
+      const d = dist(world, drag.startWorld);
+      if(d > (3 / state.view.zoom)) drag.moved = true;
+      if(drag.moved){
+        node.hOut = { x: world.x, y: world.y };
+        if(node.mode === 'symmetric' && !e.altKey){
+          node.hIn = mirrorPoint(node, node.hOut);
+        } else if(e.altKey){
+          // Alt fuerza modo independiente temporalmente: sólo se mueve hOut
+        }
+      }
+      renderAll();
+    }
+    else if(drag.type === 'handle-drag'){
+      const path = getPath(drag.pathId);
+      const node = path.nodes[drag.nodeIndex];
+      node[drag.which] = { x: world.x, y: world.y };
+      const opposite = drag.which === 'hIn' ? 'hOut' : 'hIn';
+      if(node.mode === 'symmetric' && !e.altKey){
+        node[opposite] = mirrorPoint(node, node[drag.which]);
+      }
+      // Con Alt presionado: se rompe la simetría sólo para este arrastre,
+      // sin alterar el `node.mode` guardado (independencia temporal).
+      renderAll();
+    }
+    else if(drag.type === 'node-move'){
+      const path = getPath(drag.pathId);
+      const node = path.nodes[drag.nodeIndex];
+      const dx = world.x - drag.startWorld.x;
+      const dy = world.y - drag.startWorld.y;
+      node.x = drag.origNode.x + dx;
+      node.y = drag.origNode.y + dy;
+      if(drag.origNode.hIn) node.hIn = { x: drag.origNode.hIn.x + dx, y: drag.origNode.hIn.y + dy };
+      if(drag.origNode.hOut) node.hOut = { x: drag.origNode.hOut.x + dx, y: drag.origNode.hOut.y + dy };
+      renderAll();
+    }
+    else if(drag.type === 'path-move'){
+      const path = getPath(drag.pathId);
+      const dx = world.x - drag.startWorld.x;
+      const dy = world.y - drag.startWorld.y;
+      path.nodes.forEach((n, i) => {
+        const orig = drag.origNodes[i];
+        n.x = orig.x + dx; n.y = orig.y + dy;
+        n.hIn = orig.hIn ? { x: orig.hIn.x + dx, y: orig.hIn.y + dy } : null;
+        n.hOut = orig.hOut ? { x: orig.hOut.x + dx, y: orig.hOut.y + dy } : null;
+      });
+      renderAll();
+    }
+    else if(drag.type === 'path-resize'){
+      const path = getPath(drag.pathId);
+      const bb = drag.bboxOrig;
+      const w0 = Math.max(bb.maxX - bb.minX, 0.001);
+      const h0 = Math.max(bb.maxY - bb.minY, 0.001);
+      let anchorX, anchorY, scaleX, scaleY;
+      if(drag.corner === 'se'){ anchorX = bb.minX; anchorY = bb.minY; scaleX = (world.x - bb.minX) / w0; scaleY = (world.y - bb.minY) / h0; }
+      if(drag.corner === 'nw'){ anchorX = bb.maxX; anchorY = bb.maxY; scaleX = (bb.maxX - world.x) / w0; scaleY = (bb.maxY - world.y) / h0; }
+      if(drag.corner === 'ne'){ anchorX = bb.minX; anchorY = bb.maxY; scaleX = (world.x - bb.minX) / w0; scaleY = (bb.maxY - world.y) / h0; }
+      if(drag.corner === 'sw'){ anchorX = bb.maxX; anchorY = bb.minY; scaleX = (bb.maxX - world.x) / w0; scaleY = (world.y - bb.minY) / h0; }
+      scaleX = clamp(scaleX, 0.02, 50); scaleY = clamp(scaleY, 0.02, 50);
+      const scalePt = (pt) => pt ? { x: anchorX + (pt.x - anchorX) * scaleX, y: anchorY + (pt.y - anchorY) * scaleY } : null;
+      path.nodes.forEach((n, i) => {
+        const orig = drag.origNodes[i];
+        const np = scalePt(orig);
+        n.x = np.x; n.y = np.y;
+        n.hIn = scalePt(orig.hIn);
+        n.hOut = scalePt(orig.hOut);
+      });
+      renderAll();
+    }
+    else if(drag.type === 'bg-move'){
+      const dx = world.x - drag.startWorld.x;
+      const dy = world.y - drag.startWorld.y;
+      state.bg.x = drag.orig.x + dx;
+      state.bg.y = drag.orig.y + dy;
+      renderAll();
+    }
+    else if(drag.type === 'bg-resize'){
+      const o = drag.orig;
+      let nw = o.w, nh = o.h;
+      if(drag.corner.includes('e')) nw = Math.max(10, world.x - o.x);
+      if(drag.corner.includes('w')) nw = Math.max(10, (o.x + o.w) - world.x);
+      if(drag.corner.includes('s')) nh = Math.max(10, world.y - o.y);
+      if(drag.corner.includes('n')) nh = Math.max(10, (o.y + o.h) - world.y);
+      if(state.bg.lockAspect){
+        // Escala uniforme: se conserva la proporción original, dominando
+        // el eje con mayor cambio relativo (ancho o alto según se arrastre).
+        const aspect = o.w / o.h;
+        const changeW = Math.abs(nw - o.w) / o.w;
+        const changeH = Math.abs(nh - o.h) / o.h;
+        if(changeW >= changeH) nh = nw / aspect; else nw = nh * aspect;
+      }
+      let nx = o.x, ny = o.y;
+      if(drag.corner.includes('w')) nx = o.x + o.w - nw;
+      if(drag.corner.includes('n')) ny = o.y + o.h - nh;
+      Object.assign(state.bg, { x: nx, y: ny, w: nw, h: nh });
+      renderAll();
+    }
+  }
+
+  function onStageMouseUp(){
+    if(state.isPanning){ state.isPanning = false; canvasWrap.classList.remove('panning'); return; }
+    const drag = state.dragging;
+    if(!drag) return;
+
+    // Al soltar el mouse, recalculamos y aplicamos el recorte por longitud
+    // (redondeo inferior a la Medida Base) para cualquier trayectoria afectada.
+    const affectsPath = ['new-node-handle','handle-drag','node-move','path-move','path-resize'];
+    if(affectsPath.includes(drag.type)){
+      const path = getPath(drag.pathId);
+      if(path) recomputePathLength(path);
+      pushHistory();
+    } else if(drag.type === 'bg-move' || drag.type === 'bg-resize'){
+      pushHistory();
+    }
+
+    state.dragging = null;
+    renderAll();
+  }
+
+  /* =====================================================================
+     EVENTOS DEL LIENZO
+  ===================================================================== */
+
+  svg.addEventListener('mousedown', (e) => {
+    if(state.spaceDown){
+      state.isPanning = true;
+      canvasWrap.classList.add('panning');
+      state.panStart = { clientX: e.clientX, clientY: e.clientY, viewX: state.view.x, viewY: state.view.y };
+      return;
+    }
+    if(state.tool === 'pen'){
+      onPenMouseDown(e);
+    } else if(state.tool === 'image-placing'){
+      placeBgAt(screenToWorld(e.clientX, e.clientY));
+    } else {
+      // clic en vacío: deselecciona
+      state.selection = { pathId: null, nodeIndex: null };
+      renderAll();
+    }
+  });
+  window.addEventListener('mousemove', onStageMouseMove);
+  window.addEventListener('mouseup', onStageMouseUp);
+
+  // Zoom con la rueda del mouse, centrado en el cursor
+  svg.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const worldX = (mx - state.view.x) / state.view.zoom;
+    const worldY = (my - state.view.y) / state.view.zoom;
+    const factor = e.deltaY < 0 ? 1.1 : (1 / 1.1);
+    const newZoom = clamp(state.view.zoom * factor, 0.15, 8);
+    state.view.x = mx - worldX * newZoom;
+    state.view.y = my - worldY * newZoom;
+    state.view.zoom = newZoom;
+    applyViewTransform();
+    renderOverlay(); // los radios de nodo dependen del zoom
+  }, { passive: false });
+
+  /* =====================================================================
+     TECLADO: ESPACIO (PAN), ESC/ENTER (TERMINAR TRAYECTORIA), ATAJOS
+  ===================================================================== */
+
+  window.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' && !state.spaceDown){
+      state.spaceDown = true;
+      canvasWrap.classList.add('space-ready');
+      e.preventDefault();
+    }
+    if(e.key === 'Escape' || e.key === 'Enter'){
+      if(state.activePathId){
+        state.activePathId = null;
+        renderAll();
+      }
+    }
+    if((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement.tagName !== 'INPUT'){
+      handleDeleteShortcut();
+    }
+    if(e.key.toLowerCase() === 'p' && document.activeElement.tagName !== 'INPUT') setTool('pen');
+    if(e.key.toLowerCase() === 'v' && document.activeElement.tagName !== 'INPUT') setTool('select');
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){
+      e.preventDefault();
+      if(e.shiftKey) redo(); else undo();
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    if(e.code === 'Space'){
+      state.spaceDown = false;
+      canvasWrap.classList.remove('space-ready');
+    }
+  });
+
+  function handleDeleteShortcut(){
+    const path = getSelectedPath();
+    if(!path) return;
+    if(state.selection.nodeIndex !== null && path.nodes.length > 1){
+      path.nodes.splice(state.selection.nodeIndex, 1);
+      state.selection.nodeIndex = null;
+      recomputePathLength(path);
+      pushHistory();
+      renderAll();
+    } else {
+      deletePath(path.id);
+    }
+  }
+
+  /* =====================================================================
+     HERRAMIENTAS (RAIL IZQUIERDO)
+  ===================================================================== */
+
+  function setTool(tool){
+    state.tool = tool;
+    document.getElementById('toolPen').classList.toggle('active', tool === 'pen');
+    document.getElementById('toolSelect').classList.toggle('active', tool === 'select');
+    canvasWrap.classList.toggle('tool-select', tool === 'select');
+    if(tool !== 'pen') state.activePathId = null;
+    renderAll();
+  }
+  document.getElementById('toolPen').addEventListener('click', () => setTool('pen'));
+  document.getElementById('toolSelect').addEventListener('click', () => setTool('select'));
+  document.getElementById('toolDelete').addEventListener('click', handleDeleteShortcut);
+  document.getElementById('toolImage').addEventListener('click', () => document.getElementById('fileInput').click());
+  document.getElementById('btnInsertImage').addEventListener('click', () => document.getElementById('fileInput').click());
+
+  /* =====================================================================
+     IMAGEN DE REFERENCIA
+  ===================================================================== */
+
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 480;
+        const scale = img.width > maxW ? maxW / img.width : 1;
+        state.bg = {
+          href: ev.target.result,
+          x: 40, y: 40,
+          w: img.width * scale, h: img.height * scale,
+          opacity: 0.6,
+          naturalW: img.width, naturalH: img.height,
+          lockAspect: true,
+        };
+        pushHistory();
+        renderAll();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('btnRemoveBg').addEventListener('click', () => {
+    state.bg = null;
+    pushHistory();
+    renderAll();
+  });
+  document.getElementById('bgW').addEventListener('input', (e) => {
+    if(!state.bg) return;
+    const newWcm = parseFloat(e.target.value);
+    if(!newWcm || newWcm <= 0) return;
+    const ratio = state.bg.h / state.bg.w; // relación alto/ancho actual
+    state.bg.w = newWcm * CM_TO_PX;
+    if(state.bg.lockAspect) state.bg.h = state.bg.w * ratio;
+    renderAll();
+  });
+  document.getElementById('bgH').addEventListener('input', (e) => {
+    if(!state.bg) return;
+    const newHcm = parseFloat(e.target.value);
+    if(!newHcm || newHcm <= 0) return;
+    const ratio = state.bg.w / state.bg.h; // relación ancho/alto actual
+    state.bg.h = newHcm * CM_TO_PX;
+    if(state.bg.lockAspect) state.bg.w = state.bg.h * ratio;
+    renderAll();
+  });
+  document.getElementById('bgW').addEventListener('change', pushHistory);
+  document.getElementById('bgH').addEventListener('change', pushHistory);
+  document.getElementById('bgLockAspect').addEventListener('click', () => {
+    if(!state.bg) return;
+    state.bg.lockAspect = !state.bg.lockAspect;
+    renderAll();
+  });
+  document.getElementById('bgOpacity').addEventListener('input', (e) => {
+    if(!state.bg) return;
+    state.bg.opacity = parseFloat(e.target.value);
+    renderAll();
+  });
+
+  /* =====================================================================
+     PANEL LATERAL: EVENTOS DE CONTROLES
+  ===================================================================== */
+
+  document.querySelectorAll('.sb-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panelStyle').style.display = tab.dataset.tab === 'style' ? 'block' : 'none';
+      document.getElementById('panelLayers').style.display = tab.dataset.tab === 'layers' ? 'block' : 'none';
+      document.getElementById('panelCanvas').style.display = tab.dataset.tab === 'canvas' ? 'block' : 'none';
+      document.getElementById('panelHelp').style.display = tab.dataset.tab === 'help' ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('inputBaseCm').addEventListener('input', (e) => {
+    const path = getSelectedPath();
+    if(!path) return;
+    path.baseCm = Math.max(0.1, parseFloat(e.target.value) || 0.1);
+    recomputePathLength(path);
+    renderAll();
+  });
+  document.getElementById('inputBaseCm').addEventListener('change', pushHistory);
+
+  document.getElementById('selectSnap').addEventListener('change', (e) => {
+    const path = getSelectedPath();
+    if(!path) return;
+    path.snapMode = e.target.value;
+    recomputePathLength(path);
+    pushHistory();
+    renderAll();
+  });
+
+  document.getElementById('inputStroke').addEventListener('input', (e) => {
+    const path = getSelectedPath();
+    if(!path) return;
+    // El input está en milímetros; internamente el grosor se guarda en la
+    // misma escala de "unidades de mundo" que usan los nodos (equivalente a px).
+    path.style.strokeWidth = parseFloat(e.target.value) * MM_TO_PX;
+    document.getElementById('strokeOut').textContent = parseFloat(e.target.value).toFixed(1) + ' mm';
+    recomputePathLength(path);
+    renderAll();
+  });
+  document.getElementById('inputStroke').addEventListener('change', pushHistory);
+
+  document.querySelectorAll('#segLineType button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const path = getSelectedPath();
+      if(!path) return;
+      path.style.lineType = btn.dataset.val;
+      recomputePathLength(path);
+      pushHistory();
+      renderAll();
+    });
+  });
+
+  // --- Conversión explícita LÍNEA RECTA <-> CURVA para un nodo existente ---
+  // (requisito: "Tener la opción de convertir de línea recta a curva y viceversa")
+  function nodeHasCurve(node){ return !!(node.hIn || node.hOut); }
+
+  function convertNodeToCurve(path, idx){
+    const node = path.nodes[idx];
+    const prev = path.nodes[idx - 1];
+    const next = path.nodes[idx + 1];
+    // Dirección de referencia: hacia el siguiente nodo, o si no existe,
+    // continuando la dirección desde el nodo anterior.
+    let dirX = 1, dirY = 0;
+    if(next){ dirX = next.x - node.x; dirY = next.y - node.y; }
+    else if(prev){ dirX = node.x - prev.x; dirY = node.y - prev.y; }
+    const mag = Math.hypot(dirX, dirY) || 1;
+    const len = mag / 3; // longitud de manecilla por defecto: 1/3 del segmento
+    const ux = dirX / mag, uy = dirY / mag;
+    node.hOut = { x: node.x + ux * len, y: node.y + uy * len };
+    node.hIn = mirrorPoint(node, node.hOut);
+    node.mode = 'symmetric';
+  }
+
+  function convertNodeToLine(path, idx){
+    const node = path.nodes[idx];
+    node.hIn = null;
+    node.hOut = null;
+  }
+
+  document.querySelectorAll('#segNodeType button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const path = getSelectedPath();
+      const idx = state.selection.nodeIndex;
+      if(!path || idx === null) return;
+      if(btn.dataset.val === 'curve') convertNodeToCurve(path, idx);
+      else convertNodeToLine(path, idx);
+      recomputePathLength(path);
+      pushHistory();
+      renderAll();
+    });
+  });
+
+  document.getElementById('modeSymmetric').addEventListener('click', () => {
+    const path = getSelectedPath(); const node = getSelectedNode();
+    if(!path || !node) return;
+    if(node.mode !== 'symmetric') toggleNodeMode(path, state.selection.nodeIndex);
+  });
+  document.getElementById('modeIndependent').addEventListener('click', () => {
+    const path = getSelectedPath(); const node = getSelectedNode();
+    if(!path || !node) return;
+    if(node.mode !== 'independent') toggleNodeMode(path, state.selection.nodeIndex);
+  });
+
+  document.getElementById('inputBboxW').addEventListener('change', (e) => {
+    resizePathToCm(parseFloat(e.target.value), null);
+  });
+  document.getElementById('inputBboxH').addEventListener('change', (e) => {
+    resizePathToCm(null, parseFloat(e.target.value));
+  });
+
+  function resizePathToCm(targetWcm, targetHcm){
+    const path = getSelectedPath();
+    if(!path) return;
+    const bb = pathAnchorBBox(path);
+    if(!bb) return;
+    const w0 = Math.max(bb.maxX - bb.minX, 0.001);
+    const h0 = Math.max(bb.maxY - bb.minY, 0.001);
+    const scaleX = targetWcm != null ? (targetWcm * CM_TO_PX) / w0 : 1;
+    const scaleY = targetHcm != null ? (targetHcm * CM_TO_PX) / h0 : 1;
+    const scalePt = (pt) => pt ? { x: bb.minX + (pt.x - bb.minX) * scaleX, y: bb.minY + (pt.y - bb.minY) * scaleY } : null;
+    path.nodes.forEach(n => {
+      const np = scalePt(n);
+      const hIn = scalePt(n.hIn), hOut = scalePt(n.hOut);
+      n.x = np.x; n.y = np.y; n.hIn = hIn; n.hOut = hOut;
+    });
+    recomputePathLength(path);
+    pushHistory();
+    renderAll();
+  }
+
+  document.getElementById('btnDeletePath').addEventListener('click', () => {
+    const path = getSelectedPath();
+    if(path) deletePath(path.id);
+  });
+  document.getElementById('btnNewPath').addEventListener('click', () => {
+    state.activePathId = null;
+    setTool('pen');
+  });
+
+  /* =====================================================================
+     BARRA SUPERIOR
+  ===================================================================== */
+
+  /* =====================================================================
+     MODAL DE DONACIÓN
+  ===================================================================== */
+  const donateOverlay = document.getElementById('donateOverlay');
+  document.getElementById('btnDonate').addEventListener('click', () => donateOverlay.classList.add('open'));
+  document.getElementById('donateClose').addEventListener('click', () => donateOverlay.classList.remove('open'));
+  donateOverlay.addEventListener('click', (e) => { if(e.target === donateOverlay) donateOverlay.classList.remove('open'); });
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape' && donateOverlay.classList.contains('open')) donateOverlay.classList.remove('open'); });
+
+  document.getElementById('btnUndo').addEventListener('click', undo);
+  document.getElementById('btnRedo').addEventListener('click', redo);
+
+  document.getElementById('btnNew').addEventListener('click', () => {
+    if(state.paths.length && !confirm('¿Crear un lienzo nuevo? Se perderá el trabajo no guardado.')) return;
+    state.paths = []; state.bg = null; state.activePathId = null;
+    state.selection = { pathId: null, nodeIndex: null };
+    state.history = []; state.future = [];
+    renderAll();
+  });
+
+  document.getElementById('btnSave').addEventListener('click', () => {
+    const data = JSON.stringify({ paths: state.paths, bg: state.bg }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'vectio-sketch-project.json';
+    a.click();
+  });
+
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const bb0 = state.paths.reduce((acc, p) => {
+      const b = pathAnchorBBox(p);
+      if(!b) return acc;
+      return {
+        minX: Math.min(acc.minX, b.minX), minY: Math.min(acc.minY, b.minY),
+        maxX: Math.max(acc.maxX, b.maxX), maxY: Math.max(acc.maxY, b.maxY),
+      };
+    }, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+    const pad = 20;
+    const vb = state.paths.length
+      ? `${bb0.minX - pad} ${bb0.minY - pad} ${(bb0.maxX - bb0.minX) + pad*2} ${(bb0.maxY - bb0.minY) + pad*2}`
+      : '0 0 400 400';
+    let inner = '';
+    state.paths.forEach(p => {
+      const d = buildPathD(p.nodes);
+      const dash = p.dasharrayFinal ? ` stroke-dasharray="${p.dasharrayFinal}"` : '';
+      inner += `<path d="${d}" fill="none" stroke="${p.style.color}" stroke-width="${p.style.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"${dash}/>\n`;
+    });
+    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">\n${inner}</svg>`;
+    const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'vectio-sketch-export.svg';
+    a.click();
+  });
+
+  document.getElementById('toggleGrid').addEventListener('click', () => {
+    state.showGrid = !state.showGrid;
+    document.getElementById('toggleGrid').classList.toggle('on', state.showGrid);
+    document.getElementById('toggleGridLabel').textContent = state.showGrid ? 'On' : 'Off';
+    applyViewTransform();
+  });
+  document.getElementById('toggleMeasure').addEventListener('click', () => {
+    state.showMeasurements = !state.showMeasurements;
+    document.getElementById('toggleMeasure').classList.toggle('on', state.showMeasurements);
+    document.getElementById('toggleMeasureLabel').textContent = state.showMeasurements ? 'On' : 'Off';
+    renderOverlay();
+  });
+  document.getElementById('btnResetView').addEventListener('click', () => {
+    state.view = { x: 0, y: 0, zoom: 1 };
+    applyViewTransform();
+    renderOverlay();
+  });
+
+  /* =====================================================================
+     INICIALIZACIÓN
+  ===================================================================== */
+
+  function init(){
+    renderAll();
+    updateUndoRedoButtons();
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>
