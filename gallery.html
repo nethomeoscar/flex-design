@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RFLQB40HZ7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RFLQB40HZ7');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeónFlex Design — Descargas</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root{
+    --bg-app:#0c1018;
+    --bg-header:#10141f;
+    --bg-sidebar-solid:#131826;
+    --panel-border:#232a3d;
+    --canvas-bg:#f5f6f8;
+    --text-hi:#eef1f8;
+    --text-lo:#8993ab;
+    --text-mid:#c3c9db;
+    --accent:#3b82f6;
+    --accent-soft:#3b82f61f;
+    --accent-hover:#5b93f7;
+    --danger:#ef5a6f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    background:var(--bg-app); font-family:var(--sans); color:var(--text-hi);
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+
+  #app{ display:grid; grid-template-rows:56px 1fr; height:100vh; width:100vw; }
+
+  header{
+    background:var(--bg-header); border-bottom:1px solid var(--panel-border);
+    display:flex; align-items:center; gap:14px; padding:0 18px; z-index:20;
+  }
+  .brand{ display:flex; align-items:center; gap:9px; font-weight:700; font-size:15px; white-space:nowrap; }
+  .brand .mark{
+    width:27px;height:27px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),#8b5cf6);
+    display:flex;align-items:center;justify-content:center; font-size:12px; font-weight:800; color:white;
+  }
+  .brand .sub{ color:var(--text-lo); font-weight:500; font-size:12.5px; margin-left:2px; }
+
+  .search-wrap{
+    display:flex; align-items:center; gap:8px;
+    background:#171d2c; border:1px solid var(--panel-border); border-radius:8px;
+    padding:0 10px; height:36px; width:280px; margin-left:22px; color:var(--text-lo);
+  }
+  .search-wrap input{
+    background:transparent; border:none; outline:none; color:var(--text-hi); font-size:13px;
+    width:100%; height:100%; font-family:var(--sans);
+  }
+  .search-wrap input::placeholder{ color:var(--text-lo); }
+
+  .header-right{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .stat-chip{
+    display:flex; align-items:center; gap:6px; background:#171d2c; border:1px solid var(--panel-border);
+    border-radius:8px; padding:7px 12px; font-size:12px; color:var(--text-mid); font-family:var(--mono);
+  }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:#171e2f; border:1px solid var(--panel-border); color:var(--text-hi);
+    border-radius:8px; padding:9px 15px; font-size:13px; cursor:pointer;
+    font-family:var(--sans); transition:.12s; white-space:nowrap;
+  }
+  .btn:hover{ background:#1e2740; border-color:#354162; }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:white; }
+  .btn.primary:hover{ background:var(--accent-hover); }
+  .btn.small{ padding:6px 11px; font-size:12px; }
+
+  #main{ display:grid; grid-template-columns:1fr 290px; min-height:0; }
+
+  #galleryWrap{ position:relative; background:var(--canvas-bg); overflow-y:auto; padding:26px; }
+  #galleryWrap::-webkit-scrollbar{ width:10px; }
+  #galleryWrap::-webkit-scrollbar-thumb{ background:#d3d8e2; border-radius:8px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:16px; }
+  .card{
+    background:white; border:1px solid #e2e5eb; border-radius:12px; overflow:hidden;
+    cursor:pointer; transition:.15s; box-shadow:0 1px 2px rgba(20,25,40,.04);
+    display:flex; flex-direction:column;
+  }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(20,25,40,.12); border-color:#c9cedb; }
+  .card .thumb{
+    width:100%; aspect-ratio:1/1; background:#eef0f4; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+  }
+  .card .thumb img{ width:100%; height:100%; object-fit:contain; display:block; padding:10px; }
+  .card .info{ padding:10px 12px 12px 12px; }
+  .card .name{
+    font-size:12.5px; color:#232a3d; font-weight:600; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; margin-bottom:3px;
+  }
+  .card .meta{ font-size:11px; color:#8993ab; font-family:var(--mono); display:flex; justify-content:space-between; }
+  .card .actions{ position:absolute; top:8px; right:8px; display:flex; gap:6px; opacity:0; transition:.12s; }
+  .card:hover .actions{ opacity:1; }
+  .icon-btn{
+    width:28px; height:28px; border-radius:7px; background:#ffffffee; border:1px solid #d8dce4;
+    display:flex; align-items:center; justify-content:center; color:#3a4257; cursor:pointer;
+    backdrop-filter:blur(4px);
+  }
+  .icon-btn:hover{ background:white; color:var(--accent); }
+
+  .empty-state{ text-align:center; color:#8993ab; padding:60px 20px; font-size:13.5px; line-height:1.7; }
+  .empty-state svg{ margin-bottom:14px; opacity:.5; }
+
+  #sidebar{
+    background:var(--bg-sidebar-solid); border-left:1px solid var(--panel-border);
+    display:flex; flex-direction:column; padding:20px 18px; overflow-y:auto;
+  }
+  .sb-title{ font-size:15px; font-weight:700; margin-bottom:16px; }
+  .sb-section-title{
+    font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--text-lo);
+    text-transform:uppercase; margin:20px 0 10px 0;
+  }
+  .sb-section-title:first-of-type{ margin-top:0; }
+  .stat-row{ display:flex; justify-content:space-between; margin-bottom:8px; font-size:12.5px; }
+  .stat-row .l{ color:var(--text-lo); }
+  .stat-row .v{ color:var(--text-hi); font-family:var(--mono); }
+  .hint-box{
+    background:#0f1420; border:1px dashed #2a3247; border-radius:9px; padding:12px 13px;
+    font-size:11.5px; color:var(--text-lo); line-height:1.55;
+  }
+  .hint-box b{ color:var(--text-mid); }
+  .info-badge{
+    display:flex; align-items:center; gap:7px; background:#3b82f61a; border:1px solid #3b82f640;
+    color:#7fb0ff; border-radius:8px; padding:9px 11px; font-size:11.5px; line-height:1.5; margin-bottom:6px;
+  }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,8,14,0.72); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:30px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .lightbox{
+    display:flex; max-width:920px; width:100%; max-height:86vh; background:var(--bg-sidebar-solid);
+    border:1px solid var(--panel-border); border-radius:16px; overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,.5);
+  }
+  .lightbox .imgside{ flex:1.4; background:#05070c; display:flex; align-items:center; justify-content:center; min-width:0; }
+  .lightbox .imgside img{ max-width:100%; max-height:86vh; object-fit:contain; display:block; padding:20px; }
+  .lightbox .panel{ flex:1; padding:22px; display:flex; flex-direction:column; min-width:240px; }
+  .lightbox .panel h3{ font-size:15px; margin:0 0 4px 0; word-break:break-word; }
+  .lightbox .panel .meta{ font-size:12px; color:var(--text-lo); font-family:var(--mono); margin-bottom:20px; }
+  .lightbox .panel .spacer{ flex:1; }
+  .modal-close{
+    position:absolute; top:14px; right:14px; width:30px; height:30px; background:#00000055; border:none;
+    color:white; cursor:pointer; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{ background:#000000aa; }
+
+  #toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#1a2130; border:1px solid var(--panel-border); color:var(--text-hi);
+    padding:11px 18px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none;
+    transition:.2s; z-index:200; box-shadow:0 10px 30px rgba(0,0,0,.4); max-width:420px; text-align:center;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><div class="mark">NFD</div>NeónFlex Design<span class="sub">· descargas</span></div>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Buscar por nombre…">
+    </div>
+    <div class="header-right">
+      <div class="stat-chip" id="countChip">— archivos</div>
+      <button class="btn small" id="btnRefresh">↻ Actualizar</button>
+    </div>
+  </header>
+
+  <div id="main">
+    <div id="galleryWrap">
+      <div id="loadingState" class="empty-state">Cargando galería…</div>
+      <div class="grid" id="grid" style="display:none;"></div>
+      <div class="empty-state" id="emptyState" style="none;">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><br>
+        Todavía no hay archivos disponibles.
+      </div>
+      <div class="empty-state" id="errorState" style="display:none; color:#ef5a6f;"></div>
+    </div>
+
+    <div id="sidebar">
+      <div class="sb-section-title">Resumen</div>
+      <div class="stat-row"><span class="l">Archivos disponibles</span><span class="v" id="statCount">0</span></div>
+
+      <div class="sb-section-title">Cómo usar</div>
+      <div class="hint-box">
+        <b>Ver:</b> haz clic en cualquier elemento para verlo ampliado de forma nativa.<br><br>
+        <b>Descargar:</b> usa los botones rápidos o descárgalos desde la vista en pantalla completa.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="lightboxOverlay">
+  <button class="modal-close" id="lightboxClose">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+  </button>
+  <div class="lightbox">
+    <div class="imgside"><img id="lightboxImg" src="" alt=""></div>
+    <div class="panel">
+      <h3 id="lightboxName">—</h3>
+      <div class="meta" id="lightboxMeta">—</div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="lightboxDownload">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Descargar
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfuvJzePRAw7QxhM1Mp1tY6UIVaCRWnqkYhscoygZCTIQ5yAi6n0jmoKOKkuK-H2OK/exec';
+
+  async function apiList(){
+    const res = await fetch(SCRIPT_URL + '?action=list');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data.files || [];
+  }
+
+  async function fetchImageBlobUrl(im) {
+    try {
+      const res = await fetch(im.viewUrl);
+      if (!res.ok) return '';
+      const base64Data = await res.text();
+      const mime = im.mimeType || 'image/jpeg';
+      return `data:${mime};base64,` + base64Data;
+    } catch(e) {
+      return '';
+    }
+  }
+
+  let images = [];
+  let filterText = '';
+  let activeImage = null;
+
+  function formatBytes(bytes){
+    if(!bytes) return '0 B';
+    if(bytes < 1024) return bytes + ' B';
+    if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/(1024*1024)).toFixed(2) + ' MB';
+  }
+  function formatDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  let toastTimer = null;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  async function downloadImage(im){
+    showToast(`Descargando "${im.name}"…`);
+    try{
+      const src = await fetchImageBlobUrl(im);
+      if(!src) throw new Error("No data");
+      const a = document.createElement('a');
+      a.href = src; a.download = im.name || 'archivo.jpg';
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(err){
+      window.open(im.downloadUrl, '_blank');
+    }
+  }
+
+  const grid = document.getElementById('grid');
+  const emptyState = document.getElementById('emptyState');
+  const loadingState = document.getElementById('loadingState');
+  const errorState = document.getElementById('errorState');
+
+  async function loadGallery(){
+    loadingState.style.display = 'block';
+    errorState.style.display = 'none';
+    grid.style.display = 'none';
+    emptyState.style.display = 'none';
+    try{
+      images = await apiList();
+      render();
+    }catch(err){
+      loadingState.style.display = 'none';
+      errorState.style.display = 'block';
+      errorState.textContent = 'No se pudo cargar la galería: ' + err.message;
+    }
+  }
+
+  function render(){
+    const filtered = images.filter(im => im.name.toLowerCase().includes(filterText.toLowerCase()));
+
+    document.getElementById('countChip').textContent = images.length + (images.length === 1 ? ' archivo' : ' archivos');
+    document.getElementById('statCount').textContent = images.length;
+
+    loadingState.style.display = 'none';
+    errorState.style.display = 'none';
+
+    if(images.length === 0){
+      grid.style.display = 'none';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+    grid.style.display = 'grid';
+    grid.innerHTML = '';
+
+    filtered.forEach(im => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="thumb">
+          <img id="img-${im.id}" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100%' height='100%' fill='%23f0f2f5'/></svg>" alt="${escapeHtml(im.name)}">
+          <div class="actions">
+            <button class="icon-btn dl" title="Descargar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="info">
+          <div class="name">${escapeHtml(im.name)}</div>
+          <div class="meta"><span>${formatBytes(im.size)}</span><span>${formatDate(im.uploadedAt)}</span></div>
+        </div>`;
+      card.addEventListener('click', (e) => {
+        if(e.target.closest('.dl')){ e.stopPropagation(); downloadImage(im); return; }
+        openLightbox(im);
+      });
+      grid.appendChild(card);
+
+      fetchImageBlobUrl(im).then(src => {
+        const el = document.getElementById(`img-${im.id}`);
+        if(el && src) el.src = src;
+      });
+    });
+
+    if(filtered.length === 0){
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Ningún archivo coincide con “${escapeHtml(filterText)}”.</div>`;
+    }
+  }
+
+  const lightboxOverlay = document.getElementById('lightboxOverlay');
+  async function openLightbox(im){
+    activeImage = im;
+    document.getElementById('lightboxImg').src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100%' height='100%' fill='%2305070c'/></svg>";
+    document.getElementById('lightboxName').textContent = im.name;
+    document.getElementById('lightboxMeta').textContent = `${formatBytes(im.size)} · ${formatDate(im.uploadedAt)}`;
+    lightboxOverlay.classList.add('open');
+    
+    const src = await fetchImageBlobUrl(im);
+    if(src && activeImage && activeImage.id === im.id) {
+      document.getElementById('lightboxImg').src = src;
+    }
+  }
+  function closeLightbox(){ lightboxOverlay.classList.remove('open'); activeImage = null; }
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  lightboxOverlay.addEventListener('click', (e) => { if(e.target === lightboxOverlay) closeLightbox(); });
+  document.getElementById('lightboxDownload').addEventListener('click', () => { if(activeImage) downloadImage(activeImage); });
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape' && lightboxOverlay.classList.contains('open')) closeLightbox(); });
+
+  document.getElementById('searchInput').addEventListener('input', (e) => { filterText = e.target.value; render(); });
+  document.getElementById('btnRefresh').addEventListener('click', () => { loadGallery(); showToast('Galería actualizada.'); });
+
+  loadGallery();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RFLQB40HZ7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RFLQB40HZ7');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeónFlex Design — Admin</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root{
+    --bg-app:#0c1018;
+    --bg-header:#10141f;
+    --bg-sidebar-solid:#131826;
+    --panel-border:#232a3d;
+    --canvas-bg:#f5f6f8;
+    --text-hi:#eef1f8;
+    --text-lo:#8993ab;
+    --text-mid:#c3c9db;
+    --accent:#3b82f6;
+    --accent-soft:#3b82f61f;
+    --accent-hover:#5b93f7;
+    --danger:#ef5a6f;
+    --warn:#f59e0b;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    background:var(--bg-app); font-family:var(--sans); color:var(--text-hi);
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+
+  #app{ display:grid; grid-template-rows:56px 1fr; height:100vh; width:100vw; }
+
+  header{
+    background:var(--bg-header); border-bottom:1px solid var(--panel-border);
+    display:flex; align-items:center; gap:14px; padding:0 18px; z-index:20;
+  }
+  .brand{ display:flex; align-items:center; gap:9px; font-weight:700; font-size:15px; white-space:nowrap; }
+  .brand .mark{
+    width:27px;height:27px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),#8b5cf6);
+    display:flex;align-items:center;justify-content:center; font-size:12px; font-weight:800; color:white;
+  }
+  .brand .sub{ color:var(--warn); font-weight:600; font-size:11.5px; margin-left:4px; background:#f59e0b1f;
+    border:1px solid #f59e0b40; padding:2px 8px; border-radius:20px; }
+
+  .search-wrap{
+    display:flex; align-items:center; gap:8px;
+    background:#171d2c; border:1px solid var(--panel-border); border-radius:8px;
+    padding:0 10px; height:36px; width:260px; margin-left:22px; color:var(--text-lo);
+  }
+  .search-wrap input{
+    background:transparent; border:none; outline:none; color:var(--text-hi); font-size:13px;
+    width:100%; height:100%; font-family:var(--sans);
+  }
+  .search-wrap input::placeholder{ color:var(--text-lo); }
+
+  .header-right{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .stat-chip{
+    display:flex; align-items:center; gap:6px; background:#171d2c; border:1px solid var(--panel-border);
+    border-radius:8px; padding:7px 12px; font-size:12px; color:var(--text-mid); font-family:var(--mono);
+  }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:#171e2f; border:1px solid var(--panel-border); color:var(--text-hi);
+    border-radius:8px; padding:9px 15px; font-size:13px; cursor:pointer;
+    font-family:var(--sans); transition:.12s; white-space:nowrap;
+  }
+  .btn:hover{ background:#1e2740; border-color:#354162; }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:white; }
+  .btn.primary:hover{ background:var(--accent-hover); }
+  .btn.danger{ color:var(--danger); }
+  .btn.danger:hover{ background:#3a1a22; border-color:#5a2530; }
+  .btn.small{ padding:6px 11px; font-size:12px; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  input[type="file"]{ display:none; }
+
+  #main{ display:grid; grid-template-columns:1fr 310px; min-height:0; }
+
+  #galleryWrap{ position:relative; background:var(--canvas-bg); overflow-y:auto; padding:26px; }
+  #galleryWrap::-webkit-scrollbar{ width:10px; }
+  #galleryWrap::-webkit-scrollbar-thumb{ background:#d3d8e2; border-radius:8px; }
+
+  #dropHint{
+    border:2px dashed #c7cdda; border-radius:14px; padding:36px 20px; text-align:center;
+    color:#7c8698; margin-bottom:22px; font-size:13px; line-height:1.6; background:#ffffffa8;
+  }
+  #dropHint b{ color:#495168; }
+  #galleryWrap.dragover #dropHint{ border-color:var(--accent); background:#3b82f611; color:#3b5b8f; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:16px; }
+  .card{
+    background:white; border:1px solid #e2e5eb; border-radius:12px; overflow:hidden;
+    cursor:pointer; transition:.15s; box-shadow:0 1px 2px rgba(20,25,40,.04);
+    display:flex; flex-direction:column;
+  }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(20,25,40,.12); border-color:#c9cedb; }
+  .card .thumb{
+    width:100%; aspect-ratio:1/1; background:#eef0f4; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+  }
+  .card .thumb img{ width:100%; height:100%; object-fit:contain; display:block; padding:10px; }
+  .card .info{ padding:10px 12px 12px 12px; }
+  .card .name{
+    font-size:12.5px; color:#232a3d; font-weight:600; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; margin-bottom:3px;
+  }
+  .card .meta{ font-size:11px; color:#8993ab; font-family:var(--mono); display:flex; justify-content:space-between; }
+  .card .actions{ position:absolute; top:8px; right:8px; display:flex; gap:6px; opacity:0; transition:.12s; }
+  .card:hover .actions{ opacity:1; }
+  .icon-btn{
+    width:28px; height:28px; border-radius:7px; background:#ffffffee; border:1px solid #d8dce4;
+    display:flex; align-items:center; justify-content:center; color:#3a4257; cursor:pointer;
+    backdrop-filter:blur(4px);
+  }
+  .icon-btn:hover{ background:white; color:var(--accent); }
+  .icon-btn.danger:hover{ color:var(--danger); }
+  .card.uploading{ opacity:.55; pointer-events:none; }
+
+  .empty-state{ text-align:center; color:#8993ab; padding:60px 20px; font-size:13.5px; line-height:1.7; }
+  .empty-state svg{ margin-bottom:14px; opacity:.5; }
+
+  #sidebar{
+    background:var(--bg-sidebar-solid); border-left:1px solid var(--panel-border);
+    display:flex; flex-direction:column; padding:20px 18px; overflow-y:auto;
+  }
+  .sb-title{ font-size:15px; font-weight:700; margin-bottom:16px; }
+  .sb-section-title{
+    font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--text-lo);
+    text-transform:uppercase; margin:20px 0 10px 0;
+  }
+  .sb-section-title:first-of-type{ margin-top:0; }
+  .stat-row{ display:flex; justify-content:space-between; margin-bottom:8px; font-size:12.5px; }
+  .stat-row .l{ color:var(--text-lo); }
+  .stat-row .v{ color:var(--text-hi); font-family:var(--mono); }
+  .hint-box{
+    background:#0f1420; border:1px dashed #2a3247; border-radius:9px; padding:12px 13px;
+    font-size:11.5px; color:var(--text-lo); line-height:1.55;
+  }
+  .hint-box b{ color:var(--text-mid); }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12.5px; color:var(--text-mid); margin-bottom:6px; }
+  input[type="password"]{
+    background:#0f1420; border:1px solid var(--panel-border); color:var(--text-hi);
+    border-radius:7px; padding:8px 10px; font-size:13px; font-family:var(--mono); width:100%; outline:none;
+  }
+  input[type="password"]:focus{ border-color:var(--accent); }
+
+  .lock-badge{
+    display:flex; align-items:center; gap:7px; border-radius:8px; padding:9px 11px; font-size:11.5px; line-height:1.5; margin-bottom:12px;
+  }
+  .lock-badge.locked{ background:#ef5a6f1a; border:1px solid #ef5a6f40; color:#ff9aa9; }
+  .lock-badge.unlocked{ background:#22c55e1a; border:1px solid #22c55e40; color:#7ee2a0; }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,8,14,0.72); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:30px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .lightbox{
+    display:flex; max-width:920px; width:100%; max-height:86vh; background:var(--bg-sidebar-solid);
+    border:1px solid var(--panel-border); border-radius:16px; overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,.5);
+  }
+  .lightbox .imgside{ flex:1.4; background:#05070c; display:flex; align-items:center; justify-content:center; min-width:0; }
+  .lightbox .imgside img{ max-width:100%; max-height:86vh; object-fit:contain; display:block; padding:20px; }
+  .lightbox .panel{ flex:1; padding:22px; display:flex; flex-direction:column; min-width:240px; }
+  .lightbox .panel h3{ font-size:15px; margin:0 0 4px 0; word-break:break-word; }
+  .lightbox .panel .meta{ font-size:12px; color:var(--text-lo); font-family:var(--mono); margin-bottom:20px; }
+  .lightbox .panel .spacer{ flex:1; }
+  .modal-close{
+    position:absolute; top:14px; right:14px; width:30px; height:30px; background:#00000055; border:none;
+    color:white; cursor:pointer; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{ background:#000000aa; }
+
+  #toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#1a2130; border:1px solid var(--panel-border); color:var(--text-hi);
+    padding:11px 18px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none;
+    transition:.2s; z-index:200; box-shadow:0 10px 30px rgba(0,0,0,.4); max-width:420px; text-align:center;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><div class="mark">VS</div>Vectio Gallery<span class="sub">ADMIN</span></div>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Buscar por nombre…">
+    </div>
+    <div class="header-right">
+      <div class="stat-chip" id="countChip">— imágenes</div>
+      <button class="btn primary" id="btnUpload">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        Subir imágenes
+      </button>
+      <input type="file" id="fileInput" accept="image/*,image/svg+xml" multiple>
+    </div>
+  </header>
+
+  <div id="main">
+    <div id="galleryWrap">
+      <div id="dropHint">
+        <b>Arrastra y suelta</b> imágenes o vectores SVG aquí, o usa el botón <b>“Subir imágenes”</b>.<br>
+        Se guardan directamente en tu Google Drive. Requiere el código de acceso del panel derecho.
+      </div>
+      <div id="loadingState" class="empty-state">Cargando galería desde Google Drive…</div>
+      <div class="grid" id="grid" style="display:none;"></div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><br>
+        Todavía no hay imágenes en la galería.<br>Sube la primera con el botón de arriba.
+      </div>
+      <div class="empty-state" id="errorState" style="display:none; color:#ef5a6f;"></div>
+    </div>
+
+    <div id="sidebar">
+      <div class="sb-title">Panel de administración</div>
+
+      <div class="sb-section-title">Código de acceso</div>
+      <div id="lockBadge" class="lock-badge locked">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span id="lockBadgeText">Ingresa el código para poder subir o eliminar imágenes.</span>
+      </div>
+      <div class="field">
+        <input type="password" id="adminCode" placeholder="Código de acceso">
+      </div>
+      <button class="btn small" id="btnSaveCode" style="width:100%;">Guardar código en este navegador</button>
+
+      <div class="sb-section-title">Resumen</div>
+      <div class="stat-row"><span class="l">Archivos</span><span class="v" id="statCount">0</span></div>
+      <div class="stat-row"><span class="l">Espacio usado (aprox.)</span><span class="v" id="statSize">0 KB</span></div>
+
+      <div class="sb-section-title">Acciones</div>
+      <button class="btn small" id="btnRefresh" style="width:100%; margin-bottom:8px;">↻ Actualizar lista</button>
+      <button class="btn danger small" id="btnClearAll" style="width:100%;">Vaciar galería</button>
+
+      <div class="sb-section-title">Notas</div>
+      <div class="hint-box">
+        Esta página <b>sube y elimina</b> imágenes o archivos SVG en tu Google Drive a través del script conectado.<br><br>
+        Los gráficos vectoriales <b>SVG</b> se almacenarán de forma nativa sin perder resolución ni nitidez.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="lightboxOverlay">
+  <button class="modal-close" id="lightboxClose">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+  </button>
+  <div class="lightbox">
+    <div class="imgside"><img id="lightboxImg" src="" alt=""></div>
+    <div class="panel">
+      <h3 id="lightboxName">—</h3>
+      <div class="meta" id="lightboxMeta">—</div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="lightboxDownload" style="margin-bottom:10px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Descargar
+      </button>
+      <button class="btn danger" id="lightboxDelete">Eliminar archivo</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfuvJzePRAw7QxhM1Mp1tY6UIVaCRWnqkYhscoygZCTIQ5yAi6n0jmoKOKkuK-H2OK/exec';
+
+  async function apiList(){
+    const res = await fetch(SCRIPT_URL + '?action=list');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data.files || [];
+  }
+
+  async function apiPost(payload){
+    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data;
+  }
+
+  async function fetchImageBlobUrl(im) {
+    try {
+      const res = await fetch(im.viewUrl);
+      if (!res.ok) return '';
+      const base64Data = await res.text();
+      const mime = im.mimeType || 'image/jpeg';
+      return `data:${mime};base64,` + base64Data;
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function getCode(){ return sessionStorage.getItem('vectio_admin_code') || ''; }
+  function setCode(v){ sessionStorage.setItem('vectio_admin_code', v); }
+  function refreshLockBadge(){
+    const badge = document.getElementById('lockBadge');
+    const text = document.getElementById('lockBadgeText');
+    if(getCode()){
+      badge.className = 'lock-badge unlocked';
+      text.textContent = 'Código guardado en este navegador. Ya puedes subir y eliminar.';
+    } else {
+      badge.className = 'lock-badge locked';
+      text.textContent = 'Ingresa el código para poder subir o eliminar imágenes.';
+    }
+  }
+
+  document.getElementById('adminCode').value = getCode();
+  refreshLockBadge();
+  document.getElementById('btnSaveCode').addEventListener('click', () => {
+    setCode(document.getElementById('adminCode').value.trim());
+    refreshLockBadge();
+    showToast('Código guardado en este navegador.');
+  });
+
+  let images = [];
+  let filterText = '';
+  let activeImage = null;
+
+  function formatBytes(bytes){
+    if(!bytes) return '0 B';
+    if(bytes < 1024) return bytes + ' B';
+    if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/(1024*1024)).toFixed(2) + ' MB';
+  }
+  function formatDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  let toastTimer = null;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  async function downloadImage(im){
+    showToast(`Descargando "${im.name}"…`);
+    try{
+      const src = await fetchImageBlobUrl(im);
+      if(!src) throw new Error("No data");
+      const a = document.createElement('a');
+      a.href = src; a.download = im.name || 'archivo.jpg';
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(err){
+      window.open(im.downloadUrl, '_blank');
+    }
+  }
+
+  function readAsDataURL(file){
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  function loadImageEl(src){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  async function processFile(file){
+    const originalDataUrl = await readAsDataURL(file);
+    let mimeType = file.type || 'image/jpeg';
+
+    // Si el archivo es un SVG se salta la compresión de Canvas para mantenerlo vectorial
+    if (mimeType === 'image/svg+xml' || file.name.endsWith('.svg')) {
+      return { name: file.name, mimeType: 'image/svg+xml', dataUrl: originalDataUrl };
+    }
+
+    const img = await loadImageEl(originalDataUrl);
+    const maxDim = 2000;
+    let { width, height } = img;
+    let dataUrl = originalDataUrl;
+
+    const needsResize = width > maxDim || height > maxDim || file.size > 4 * 1024 * 1024;
+    if(needsResize){
+      const scale = Math.min(1, maxDim / Math.max(width, height));
+      const cw = Math.max(1, Math.round(width * scale));
+      const ch = Math.max(1, Math.round(height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = cw; canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, cw, ch);
+      dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      mimeType = 'image/jpeg';
+    }
+    return { name: file.name, mimeType, dataUrl };
+  }
+
+  const grid = document.getElementById('grid');
+  const emptyState = document.getElementById('emptyState');
+  const loadingState = document.getElementById('loadingState');
+  const errorState = document.getElementById('errorState');
+
+  async function loadGallery(){
+    loadingState.style.display = 'block';
+    errorState.style.display = 'none';
+    grid.style.display = 'none';
+    emptyState.style.display = 'none';
+    try{
+      images = await apiList();
+      render();
+    }catch(err){
+      loadingState.style.display = 'none';
+      errorState.style.display = 'block';
+      errorState.textContent = 'No se pudo conectar con Google Drive: ' + err.message;
+    }
+  }
+
+  function render(){
+    const filtered = images.filter(im => im.name.toLowerCase().includes(filterText.toLowerCase()));
+
+    document.getElementById('countChip').textContent = images.length + (images.length === 1 ? ' archivo' : ' archivos');
+    document.getElementById('statCount').textContent = images.length;
+    const totalBytes = images.reduce((a, im) => a + (im.size || 0), 0);
+    document.getElementById('statSize').textContent = formatBytes(totalBytes);
+    document.getElementById('btnClearAll').disabled = images.length === 0;
+
+    loadingState.style.display = 'none';
+    errorState.style.display = 'none';
+
+    if(images.length === 0){
+      grid.style.display = 'none';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+    grid.style.display = 'grid';
+    grid.innerHTML = '';
+
+    filtered.forEach(im => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="thumb">
+          <img id="img-${im.id}" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100%' height='100%' fill='%23f0f2f5'/></svg>" alt="${escapeHtml(im.name)}">
+          <div class="actions">
+            <button class="icon-btn dl" title="Descargar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            </button>
+            <button class="icon-btn danger del" title="Eliminar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="info">
+          <div class="name">${escapeHtml(im.name)}</div>
+          <div class="meta"><span>${formatBytes(im.size)}</span><span>${formatDate(im.uploadedAt)}</span></div>
+        </div>`;
+      
+      card.addEventListener('click', (e) => {
+        if(e.target.closest('.dl')){ e.stopPropagation(); downloadImage(im); return; }
+        if(e.target.closest('.del')){ e.stopPropagation(); confirmDelete(im); return; }
+        openLightbox(im);
+      });
+      grid.appendChild(card);
+
+      fetchImageBlobUrl(im).then(src => {
+        const el = document.getElementById(`img-${im.id}`);
+        if(el && src) el.src = src;
+      });
+    });
+
+    if(filtered.length === 0){
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Ningún archivo coincide con “${escapeHtml(filterText)}”.</div>`;
+    }
+  }
+
+  async function addFiles(fileList){
+    const code = getCode();
+    if(!code){
+      showToast('Ingresa y guarda el código de acceso antes de subir archivos.');
+      return;
+    }
+    const files = Array.from(fileList).filter(f => f.type.startsWith('image/') || f.name.endsWith('.svg'));
+    if(files.length === 0) return;
+
+    for(const file of files){
+      showToast(`Subiendo "${file.name}"…`);
+      try{
+        const processed = await processFile(file);
+        const result = await apiPost({ action: 'upload', code, name: processed.name, mimeType: processed.mimeType, data: processed.dataUrl });
+        images.unshift(result.file);
+        render();
+      }catch(err){
+        showToast(`Error al subir "${file.name}": ` + err.message);
+      }
+    }
+    showToast('Subida completa.');
+  }
+
+  function confirmDelete(im){
+    if(!confirm(`¿Eliminar "${im.name}"? Se moverá a la papelera de Google Drive.`)) return;
+    deleteImage(im.id);
+  }
+  async function deleteImage(id){
+    const code = getCode();
+    if(!code){
+      showToast('Ingresa y guarda el código de acceso antes de eliminar archivos.');
+      return;
+    }
+    try{
+      await apiPost({ action: 'delete', code, id });
+      images = images.filter(im => im.id !== id);
+      render();
+      showToast('Archivo eliminado.');
+      if(activeImage && activeImage.id === id) closeLightbox();
+    }catch(err){
+      showToast('No se pudo eliminar: ' + err.message);
+    }
+  }
+
+  const lightboxOverlay = document.getElementById('lightboxOverlay');
+  async function openLightbox(im){
+    activeImage = im;
+    document.getElementById('lightboxImg').src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100%' height='100%' fill='%2305070c'/></svg>";
+    document.getElementById('lightboxName').textContent = im.name;
+    document.getElementById('lightboxMeta').textContent = `${formatBytes(im.size)} · ${formatDate(im.uploadedAt)}`;
+    lightboxOverlay.classList.add('open');
+    
+    const src = await fetchImageBlobUrl(im);
+    if(src && activeImage && activeImage.id === im.id) {
+      document.getElementById('lightboxImg').src = src;
+    }
+  }
+  function closeLightbox(){ lightboxOverlay.classList.remove('open'); activeImage = null; }
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  lightboxOverlay.addEventListener('click', (e) => { if(e.target === lightboxOverlay) closeLightbox(); });
+  document.getElementById('lightboxDownload').addEventListener('click', () => { if(activeImage) downloadImage(activeImage); });
+  document.getElementById('lightboxDelete').addEventListener('click', () => { if(activeImage) confirmDelete(activeImage); });
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape' && lightboxOverlay.classList.contains('open')) closeLightbox(); });
+
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('btnUpload').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+
+  const galleryWrap = document.getElementById('galleryWrap');
+  ['dragenter','dragover'].forEach(evt => galleryWrap.addEventListener(evt, (e) => { e.preventDefault(); galleryWrap.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(evt => galleryWrap.addEventListener(evt, (e) => { e.preventDefault(); galleryWrap.classList.remove('dragover'); }));
+  galleryWrap.addEventListener('drop', (e) => {
+    if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  document.getElementById('searchInput').addEventListener('input', (e) => { filterText = e.target.value; render(); });
+  document.getElementById('btnRefresh').addEventListener('click', loadGallery);
+  document.getElementById('btnClearAll').addEventListener('click', async () => {
+    if(images.length === 0) return;
+    const code = getCode();
+    if(!code){ showToast('Ingresa y guarda el código de acceso antes de eliminar archivos.'); return; }
+    if(!confirm('¿Eliminar TODOS los archivos de la galería? Esta acción no se puede deshacer.')) return;
+    showToast('Eliminando todos los archivos…');
+    for(const im of [...images]){
+      try{ await apiPost({ action: 'delete', code, id: im.id }); }catch(err){ }
+    }
+    await loadGallery();
+    showToast('Galería vaciada.');
+  });
+
+  loadGallery();
+
+})();
+</script>
+</body>
+</html>
